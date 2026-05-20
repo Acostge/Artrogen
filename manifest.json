@@ -1,0 +1,21 @@
+{
+  "short_name": "Cartelera",
+  "name": "ARTROGEN - Calendario Quirúrgico",
+  "icons": [
+    {
+      "src": "A.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "A.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "background_color": "#4c2174",
+  "theme_color": "#4c2174",
+  "display": "standalone",
+  "orientation": "portrait"
+}
