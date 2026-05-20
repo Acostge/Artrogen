@@ -7,10 +7,26 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #f1f5f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; }
+        body {
+    		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    		margin: 0;
+    		padding: 0;
+    		background-color: #f4f6f9; /* Un gris muy sutil para el fondo general */
+		}
         
         /* Contenedor del Teléfono */
-        .phone-mockup { width: 375px; height: 780px; background-color: #ffffff; border-radius: 30px; box-shadow: 0 12px 32px rgba(0,0,0,0.15); overflow: hidden; display: flex; flex-direction: column; border: 8px solid #1e293b; position: relative; }
+	.phone-container {
+    		width: 100%;
+    		max-width: 600px; /* Evita que se desarme en monitores gigantes, manteniendo el look de cartelera móvil */
+    		margin: 0 auto;
+    		background-color: #ffffff;
+    		min-height: 100vh;
+    		display: flex;
+    		flex-direction: column;
+   		 box-shadow: none; /* Le quitamos la sombra de teléfono */
+    		border-radius: 0px; /* ¡Adiós bordes redondeados, ahora es cuadriculado limpio! */
+    		overflow-x: hidden;
+		}
         
         /* Encabezado */
         .app-header { background-color: #4c2174; color: #ffffff; padding: 18px; text-align: center; border-bottom: 4px solid #22c55e; }
