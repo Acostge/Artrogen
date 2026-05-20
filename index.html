@@ -233,7 +233,7 @@
                         <div class="card-field"><strong>👤 Paciente:</strong> ${c.paciente}</div>
                         <div class="card-field"><strong>🚑 Inst. / Transp:</strong> ${c.equipo.join(', ')}</div>
 			<div class="card-field"><strong>📱 RDV:</strong> ${c.rdv || 'No asignado'}</div>
-                        <div class="card-field"><strong>🔑 Autorización:</strong> ${c.autorizacion || 'N/A'}</div>
+                        <div class="card-field"><strong>🔑 Aprobación:</strong> ${c.Aprobación || 'N/A'}</div>
                         ${sistemasHtml ? `<div class="tag-group">${sistemasHtml}</div>` : ''}
                     </div>`;
             });
