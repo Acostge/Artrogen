@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARTROGEN - Calendario Quirúrgico</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f1f5f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 10px; }
+        
+        /* Contenedor del Teléfono */
+        .phone-mockup { width: 375px; height: 780px; background-color: #ffffff; border-radius: 30px; box-shadow: 0 12px 32px rgba(0,0,0,0.15); overflow: hidden; display: flex; flex-direction: column; border: 8px solid #1e293b; position: relative; }
+        
+        /* Encabezado */
+        .app-header { background-color: #4c2174; color: #ffffff; padding: 18px; text-align: center; border-bottom: 4px solid #22c55e; }
+        .app-header h1 { font-size: 22px; letter-spacing: 1.5px; font-weight: 700; }
+        .app-header p { font-size: 11px; opacity: 0.85; margin-top: 2px; font-style: italic; }
+        
+        /* Selectores de Fecha */
+        .control-panel { padding: 12px; display: flex; gap: 10px; background-color: #ffffff; border-bottom: 1px solid #e2e8f0; }
+        .select-box { flex: 1; padding: 8px; border-radius: 8px; border: 2px solid #cbd5e1; font-weight: bold; color: #334155; outline: none; cursor: pointer; font-size: 14px; }
+        .select-box:focus { border-color: #4c2174; }
+        
+        /* Días de la semana */
+        .week-days { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; background-color: #f8fafc; padding: 10px 0; font-size: 11px; font-weight: bold; color: #64748b; border-bottom: 1px solid #e2e8f0; }
+        
+        /* Matriz del Calendario */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); padding: 10px; gap: 5px; background: #ffffff; }
+        .day-cell { background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; display: flex; flex-direction: column; justify-content: space-between; padding: 5px; aspect-ratio: 1 / 1; cursor: pointer; transition: all 0.2s; }
+        .day-cell:hover:not(.outside) { background-color: #f1f5f9; }
+        .day-number { font-size: 12px; font-weight: bold; color: #334155; }
+        
+        /* Días Grises (Mes Anterior / Siguiente) */
+        .day-cell.outside { background-color: #ffffff; border-color: #f1f5f9; cursor: default; }
+        .day-cell.outside .day-number { color: #cbd5e1; font-weight: normal; }
+        
+        /* Estados de Cirugía */
+        .status-green { background-color: #2e7d32 !important; border-color: #1b5e20; }
+        .status-green .day-number { color: #ffffff; }
+        .status-red { background-color: #c62828 !important; border-color: #b71c1c; }
+        .status-red .day-number { color: #ffffff; }
+        
+        /* Indicador de cantidad */
+        .info-badge { font-size: 8px; font-weight: bold; background-color: rgba(255, 255, 255, 0.25); text-align: center; color: #ffffff; border-radius: 4px; padding: 2px 1px; text-transform: uppercase; letter-spacing: 0.3px; }
+        
+        /* Panel Inferior de Detalles */
+        .interactive-panel { flex-grow: 1; background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 15px; overflow-y: auto; }
+        .surgery-card { background: #ffffff; border-radius: 10px; padding: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; margin-bottom: 10px; border-left: 5px solid #2e7d32; }
+        
+        .card-time-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-bottom: 8px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 6px; }
+        .card-field { font-size: 12.5px; margin-bottom: 5px; color: #334155; display: flex; align-items: flex-start; }
+        .card-field strong { color: #64748b; font-size: 11.5px; width: 110px; display: inline-block; flex-shrink: 0; }
+        
+        /* Etiquetas */
+        .tag-group { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 12px; }
+        .mini-tag { font-size: 10px; background: #e2e8f0; color: #334155; padding: 3px 8px; border-radius: 6px; font-weight: bold; }
+        .mini-tag.purple { background: #f3e8ff; color: #6b21a8; }
+        
+        /* Pantalla de Carga */
+        .loading-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); justify-content: center; align-items: center; font-weight: bold; color: #4c2174; z-index: 10; font-size: 15px; }
+        .close-btn { background: #e2e8f0; border: none; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; float: right; color: #475569; }
+        .close-btn:hover { background: #cbd5e1; }
+    </style>
+</head>
+<body>
+
+    <div class="phone-mockup">
+        <div id="loading" class="loading-overlay"><i class="fa-solid fa-spinner fa-spin fa-lg"></i>&nbsp; Actualizando Cartelera...</div>
+
+        <div class="app-header">
+            <h1 style="font-size:34px; letter-spacing:1px;">ARTROGEN</h1>
+            <p>pasión por la ciencia...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;J-50010476-6</p>
+        </div>
+
+        <div class="control-panel">
+            <select class="select-box" id="monthSelect" onchange="renderCalendar()"></select>
+            <select class="select-box" id="yearSelect" onchange="renderCalendar()"></select>
+        </div>
+
+        <div class="week-days">
+            <span>DOM</span><span>LUN</span><span>MAR</span><span>MIÉ</span><span>JUE</span><span>VIE</span><span>SÁB</span>
+        </div>
+
+        <div class="calendar-grid" id="mainCalendar"></div>
+
+        <div class="interactive-panel">
+            <div id="legendSection" style="font-size:12px; color:#64748b; text-align:center; margin-top:35px;">
+                <i class="fa-solid fa-circle-info" style="color:#4c2174;"></i> Selecciona un día marcado para ver las cirugías reales.
+            </div>
+            <div id="detailsSection" style="display:none;">
+                <button class="close-btn" onclick="closePanel()">Volver</button>
+                <h4 id="panelTitle" style="font-size:14px; color:#4c2174; margin-bottom:12px; text-transform:uppercase; font-weight:700;">Cirugías</h4>
+                <div id="cardsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // REEMPLAZA ESTA URL CON TU ENLACE DE EJECUCIÓN ACTUALIZADO
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQA1YSG4G_QCGiGosHksyhBrB4KwxJ1o06J-475b_5HFDY2HTq2lCRvxcPDY7ieIe3/exec";
+
+        const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        let databaseGlobal = {}; 
+
+        window.onload = function() {
+            const mSelect = document.getElementById('monthSelect');
+            meses.forEach((m, idx) => {
+                let opt = new Option(m, idx);
+                if(idx === 4) opt.selected = true; // Arranca en Mayo por defecto
+                mSelect.add(opt);
+            });
+
+            const ySelect = document.getElementById('yearSelect');
+            for(let y = 2026; y <= 2050; y++) {
+                ySelect.add(new Option(y, y));
+            }
+            renderCalendar();
+        };
+
+        async function renderCalendar() {
+            closePanel();
+            const mesSelected = parseInt(document.getElementById('monthSelect').value);
+            const anoSelected = parseInt(document.getElementById('yearSelect').value);
+            
+            document.getElementById('loading').style.display = 'flex';
+            databaseGlobal = {};
+
+            if(WEB_APP_URL && !WEB_APP_URL.includes("AQUÍ_VA_TU_NUEVA_URL")) {
+                try {
+                    let response = await fetch(`${WEB_APP_URL}?mes=${meses[mesSelected]}&ano=${anoSelected}`);
+                    databaseGlobal = await response.json();
+                } catch (e) {
+                    console.error("Error en la conexión a la base de datos:", e);
+                }
+            }
+            document.getElementById('loading').style.display = 'none';
+
+            const grid = document.getElementById('mainCalendar');
+            grid.innerHTML = '';
+
+            // --- LÓGICA DE DÍAS GRISES DEL MES ANTERIOR ---
+            const primerDiaSemana = new Date(anoSelected, mesSelected, 1).getDay();
+            const totalDiasMesAnterior = new Date(anoSelected, mesSelected, 0).getDate();
+            
+            for(let i = primerDiaSemana - 1; i >= 0; i--) {
+                let numeroDiaAnterior = totalDiasMesAnterior - i;
+                grid.innerHTML += `
+                    <div class="day-cell outside">
+                        <span class="day-number">${numeroDiaAnterior}</span>
+                    </div>`;
+            }
+
+            // --- DÍAS DEL MES ACTUAL ---
+            const totalDiasMes = new Date(anoSelected, mesSelected + 1, 0).getDate();
+            const hoy = new Date();
+            hoy.setHours(0,0,0,0);
+
+            for(let day = 1; day <= totalDiasMes; day++) {
+                const mm = (mesSelected + 1) < 10 ? '0' + (mesSelected + 1) : (mesSelected + 1);
+                const dd = day < 10 ? '0' + day : day;
+                const claveFecha = `${anoSelected}-${mm}-${dd}`;
+
+                let tieneCirugia = databaseGlobal[claveFecha];
+                let cellClass = '';
+                let badgeHtml = '';
+
+                if(tieneCirugia && tieneCirugia.length > 0) {
+                    let count = tieneCirugia.length;
+                    badgeHtml = `<span class="info-badge">${count} ${count === 1 ? 'Cx' : 'Cx'}</span>`;
+                    let targetDate = new Date(anoSelected, mesSelected, day);
+                    cellClass = (targetDate < hoy) ? 'status-red' : 'status-green';
+                }
+
+                grid.innerHTML += `
+                    <div class="day-cell ${cellClass}" onclick="${tieneCirugia ? `showDay('${claveFecha}')` : ''}">
+                        <span class="day-number">${dd}</span>
+                        ${badgeHtml}
+                    </div>`;
+            }
+
+            // --- LÓGICA DE DÍAS GRISES DEL MES SIGUIENTE ---
+            const ultimoDiaSemana = new Date(anoSelected, mesSelected, totalDiasMes).getDay();
+            let diasFaltantes = 6 - ultimoDiaSemana;
+            for(let day = 1; day <= diasFaltantes; day++) {
+                let ddSiguiente = day < 10 ? '0' + day : day;
+                grid.innerHTML += `
+                    <div class="day-cell outside">
+                        <span class="day-number">${ddSiguiente}</span>
+                    </div>`;
+            }
+        }
+
+        function showDay(claveFecha) {
+            const dataList = databaseGlobal[claveFecha];
+            if(!dataList || dataList.length === 0) return;
+
+            // Formatear título visual corto
+            const partes = claveFecha.split('-');
+            document.getElementById('panelTitle').innerText = `Cirugías del ${partes[2]}/${partes[1]}/${partes[0]}`;
+            
+            const listContainer = document.getElementById('cardsList');
+            listContainer.innerHTML = ''; 
+
+            dataList.forEach(c => {
+                let sistemasHtml = c.sistemas.filter(s => s.trim() !== "").map(s => `<span class="mini-tag purple"><i class="fa-solid fa-layer-group"></i> ${s.trim()}</span>`).join('');
+                let equipoHtml = c.equipo.filter(e => e.trim() !== "").map(e => `<span class="mini-tag"><i class="fa-solid fa-user-doctor"></i> ${e.trim()}</span>`).join('');
+
+                listContainer.innerHTML += `
+                    <div class="surgery-card" style="border-left-color: ${document.querySelector('.status-red') && claveFecha < new Date().toISOString().split('T')[0] ? '#c62828' : '#2e7d32'}">
+                        <div class="card-time-row">
+                            <span style="color:#4c2174;"><i class="fa-regular fa-clock"></i> ${c.hora}</span>
+                            <span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:6px; font-size:11px;">${c.est}</span>
+                        </div>
+                        <div class="card-field"><strong>🏥 Clínica:</strong> ${c.clinica}</div>
+                        <div class="card-field"><strong>👨🏻‍⚕️ Doctor (a):</strong> ${c.medico}</div>
+                        <div class="card-field"><strong>👤 Paciente:</strong> ${c.paciente}</div>
+                        <div class="card-field"><strong>🚑 Inst. / Transp:</strong> ${c.equipo.join(', ')}</div>
+			<div class="card-field"><strong>📱 RDV:</strong> ${c.rdv || 'No asignado'}</div>
+                        <div class="card-field"><strong>🔑 Autorización:</strong> ${c.autorizacion || 'N/A'}</div>
+                        ${sistemasHtml ? `<div class="tag-group">${sistemasHtml}</div>` : ''}
+                    </div>`;
+            });
+
+            document.getElementById('legendSection').style.display = 'none';
+            document.getElementById('detailsSection').style.display = 'block';
+        }
+
+        function closePanel() {
+            document.getElementById('legendSection').style.display = 'block';
+            document.getElementById('detailsSection').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
