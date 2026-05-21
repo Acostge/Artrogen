@@ -10,10 +10,10 @@
 
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
-  window.OneSignal = window.OneSignal || [];
-  OneSignal.push(function() {
-    OneSignal.init({
-      appId: "6c45092c-f004-4e40-a652-ac0d475e3c80", // Tu App ID real
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "6c45092c-f004-4e40-a652-ac0d475e3c80",
     });
   });
 </script>
