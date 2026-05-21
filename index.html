@@ -5,6 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ARTROGEN - Calendario Quirúrgico</title>
 <link rel="manifest" href="./manifest.json">
+
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignal = window.OneSignal || [];
+  OneSignal.push(function() {
+    OneSignal.init({
+      appId: "6c45092c-f004-4e40-a652-ac0d475e3c80", // <--- REEMPLAZA CON TU APP ID DE ONESIGNAL
+      safari_web_id: "REEMPLAZA_SI_USA_SAFARI_OPCIONAL", 
+      notifyButton: {
+        enable: false, /* Desactivamos el botón flotante feo porque ya usamos el prompt nativo */
+      },
+    });
+  });
+</script>
+
 <link rel="icon" type="image/png" sizes="192x192" href="A.png">
 <link rel="icon" type="image/png" sizes="512x512" href="A.png">
 <link rel="apple-touch-icon" sizes="180x180" href="A.png">
