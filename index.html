@@ -6,16 +6,6 @@
     <title>ARTROGEN - Calendario Quirúrgico</title>
 <link rel="manifest" href="./manifest.json">
 
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "6c45092c-f004-4e40-a652-ac0d475e3c80",
-    });
-  });
-</script>
-
 <link rel="icon" type="image/png" sizes="192x192" href="A.png">
 <link rel="icon" type="image/png" sizes="512x512" href="A.png">
 <link rel="apple-touch-icon" sizes="180x180" href="A.png">
@@ -193,20 +183,26 @@
         const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
         let databaseGlobal = {}; 
 
-        window.onload = function() {
-            const mSelect = document.getElementById('monthSelect');
-            meses.forEach((m, idx) => {
-                let opt = new Option(m, idx);
-                if(idx === 4) opt.selected = true; 
-                mSelect.add(opt);
-            });
+	window.onload = function() {
+    		const mSelect = document.getElementById('monthSelect');
+    		const mesActual = new Date().getMonth(); // 👈 Esto detecta el mes real de hoy automáticamente
+    
+    		meses.forEach((m, idx) => {
+        	let opt = new Option(m, idx);
+        	if(idx === mesActual) opt.selected = true; // 👈 Cambiamos el 4 fijo por el mes real
+        	mSelect.add(opt);
+    	});
 
-            const ySelect = document.getElementById('yearSelect');
-            for(let y = 2026; y <= 2050; y++) {
-                ySelect.add(new Option(y, y));
-            }
-            renderCalendar();
-        };
+    const ySelect = document.getElementById('yearSelect');
+    const anoActual = new Date().getFullYear(); // 👈 Detecta el año real de hoy automáticamente
+    
+    for(let y = 2026; y <= 2050; y++) {
+        let opt = new Option(y, y);
+        if(y === anoActual) opt.selected = true; // 👈 Hace que también se pare en el año correcto solo
+        ySelect.add(opt);
+    }
+    renderCalendar();
+};
 
         async function renderCalendar() {
             closePanel();
