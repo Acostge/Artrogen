@@ -214,7 +214,7 @@
 
             if(WEB_APP_URL) {
                 try {
-                    let response = await fetch(`${WEB_APP_URL}?mes=${meses[mesSelected]}&ano=${anoSelected}`);
+                    let response = await fetch(`${WEB_APP_URL}?mes=${meses[mesSelected]}&ano=${anoSelected}&_=${new Date().getTime()}`);
                     databaseGlobal = await response.json();
                 } catch (e) {
                     console.error("Error en la conexión:", e);
