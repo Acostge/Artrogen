@@ -28,13 +28,12 @@ messaging.onBackgroundMessage((payload) => {
     data: payload.data
   };
 
-  // 1. Mostrar la alerta visual en la barra de notificaciones del celular
+// 1. Mostrar la alerta visual en la barra de notificaciones del celular
   self.registration.showNotification(notificationTitle, notificationOptions);
 
-  // 2. ¡EL GLOBO ROJO DE OUTLOOK! Pintar el círculo en el icono de la pantalla de inicio
-  if ('setAppBadge' in navigator) {
-    navigator.setAppBadge(1).catch((error) => {
+  // 2. CORRECCIÓN: Añadido 'self.' antes de navigator para entorno de Service Worker
+  if ('navigator' in self && 'setAppBadge' in self.navigator) {
+    self.navigator.setAppBadge(1).catch((error) => {
       console.error("Error al establecer el badge:", error);
     });
   }
-});
