@@ -368,34 +368,5 @@
             document.getElementById('syncBtnContainer').style.display = 'block';
         }
     </script>
-
-// Registrar el Service Worker y solicitar permiso de notificaciones al usuario
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./firebase-messaging-sw.js')
-      .then((registration) => {
-        console.log('Service Worker de Firebase registrado con éxito');
-        
-        // CORRECCIÓN: Cambiado 'validKey' por 'vapidKey'
-        return getToken(messaging, { 
-          vapidKey: 'BN9HuFD8X687xoi-XLZhIMQx4OZQsR-FC1DYVl49d9gjqBi0QONT4KqdmpqiWBueptracDd8EwqRDxOHJN3z-5Y',
-          serviceWorkerRegistration: registration 
-        });
-      })
-      .then((currentToken) => {
-        if (currentToken) {
-          console.log("Dispositivo listo para recibir push. Token:", currentToken);
-          
-          // AGREGAR ESTO: Suscribir de forma nativa al tema "cirugias"
-          fetch(`https://iid.googleapis.com/iid/v1/${currentToken}/rel/topics/cirugias`, {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + currentToken }
-          }).then(() => console.log('Suscrito con éxito al tema: cirugias'));
-        }
-      })
-      .catch((err) => {
-        console.error('Error al configurar notificaciones push:', err);
-      });
-  }
-
 </body>
 </html>
