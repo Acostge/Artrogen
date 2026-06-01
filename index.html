@@ -169,7 +169,7 @@
         .close-btn { background: #e2e8f0; border: none; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; cursor: pointer; float: right; color: #475569; }
         .close-btn:hover { background: #cbd5e1; }
 
-/* --- DISEÑO DE LA NUEVA BARRA FIJA DE CIRUGÍAS --- */
+        /* --- DISEÑO DE LA NUEVA BARRA FIJA DE CIRUGÍAS --- */
         .details-header-panel {
             background-color: #ffffff; /* Fondo blanco como el panel de actualizar */
             padding: 8px 16px;
@@ -201,6 +201,18 @@
         }
         .details-header-panel .close-btn:hover { background: #cbd5e1; }
 
+        /* --- ESTILOS PARA CIRUGÍAS SUSPENDIDAS --- */
+        .surgery-card.card-suspended {
+            background-color: #ffebee !important; /* Rojo claro / Rosado suave */
+            border-left: 5px solid #c62828 !important; /* Borde izquierdo rojo intenso */
+            border-color: #ffcdd2;
+        }
+        
+        .text-suspended {
+            font-weight: 900 !important; /* Texto en negrita resaltada */
+            color: #c62828 !important;   /* Color rojo quirúrgico de alerta */
+        }
+
     </style>
 </head>
 <body>
@@ -224,7 +236,7 @@
 
         <div class="calendar-grid" id="mainCalendar"></div>
 
-<!-- Contenedor original del botón actualizar -->
+        <!-- Contenedor original del botón actualizar -->
         <div class="sync-button-container" id="syncBtnContainer">
             <button class="btn-sync" id="syncBtn" onclick="manualSync()">
                 <i class="fa-solid fa-sync" id="syncIcon"></i> Actualizar
@@ -363,7 +375,7 @@
             }
         }
 
-function showDay(claveFecha) {
+        function showDay(claveFecha) {
             const dataList = databaseGlobal[claveFecha];
             if(!dataList || dataList.length === 0) return;
 
@@ -376,10 +388,20 @@ function showDay(claveFecha) {
             dataList.forEach(c => {
                 let sistemasHtml = c.sistemas.filter(s => s.trim() !== "").map(s => `<span class="mini-tag purple"><i class="fa-solid fa-layer-group"></i> ${s.trim()}</span>`).join('');
 
+                // DETECCIÓN DE SUSPENSIÓN: Evaluamos si la celda de la hora dice "SUSPENDIDA"
+                const esSuspendida = c.hora.trim().toUpperCase() === "SUSPENDIDA";
+                
+                // Asignamos las clases y estilos dinámicamente en base al estado
+                const tarjetaClase = esSuspendida ? "surgery-card card-suspended" : "surgery-card";
+                const horaEstiloClase = esSuspendida ? "text-suspended" : "";
+                const bordeIzquierdoColor = esSuspendida ? '#c62828' : (claveFecha < new Date().toISOString().split('T')[0] ? '#c62828' : '#2e7d32');
+
                 listContainer.innerHTML += `
-                    <div class="surgery-card" style="border-left-color: ${claveFecha < new Date().toISOString().split('T')[0] ? '#c62828' : '#2e7d32'}">
+                    <div class="${tarjetaClase}" style="border-left-color: ${bordeIzquierdoColor}">
                         <div class="card-time-row">
-                            <span style="color:#4c2174;"><i class="fa-regular fa-clock"></i> ${c.hora}</span>
+                            <span style="color:#4c2174;" class="${horaEstiloClase}">
+                                <i class="fa-regular fa-clock"></i> ${c.hora}
+                            </span>
                             <span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:6px; font-size:10.5px;">${c.est}</span>
                         </div>
                         <div class="card-field"><strong>🏥 Clínica:</strong> ${c.clinica}</div>
