@@ -168,6 +168,39 @@
         .loading-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); justify-content: center; align-items: center; font-weight: bold; color: #4c2174; z-index: 10; font-size: 14px; }
         .close-btn { background: #e2e8f0; border: none; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; cursor: pointer; float: right; color: #475569; }
         .close-btn:hover { background: #cbd5e1; }
+
+/* --- DISEÑO DE LA NUEVA BARRA FIJA DE CIRUGÍAS --- */
+        .details-header-panel {
+            background-color: #ffffff; /* Fondo blanco como el panel de actualizar */
+            padding: 8px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            display: none; /* Se maneja dinámicamente */
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0; /* Impide que se reduzca o se desplace */
+        }
+
+        #panelTitle {
+            font-size: 13px; 
+            color: #4c2174; 
+            text-transform: uppercase; 
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .details-header-panel .close-btn {
+            background: #e2e8f0; 
+            border: none; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 11px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            color: #475569;
+            float: none; /* Quitamos el float viejo */
+        }
+        .details-header-panel .close-btn:hover { background: #cbd5e1; }
+
     </style>
 </head>
 <body>
@@ -191,19 +224,25 @@
 
         <div class="calendar-grid" id="mainCalendar"></div>
 
+<!-- Contenedor original del botón actualizar -->
         <div class="sync-button-container" id="syncBtnContainer">
             <button class="btn-sync" id="syncBtn" onclick="manualSync()">
                 <i class="fa-solid fa-sync" id="syncIcon"></i> Actualizar
             </button>
         </div>
 
+        <!-- NUEVA PESTAÑA BLANCA FIJA: Solo aparece al elegir un día -->
+        <div class="details-header-panel" id="fixedDetailsHeader">
+            <h4 id="panelTitle">Cirugías</h4>
+            <button class="close-btn" onclick="closePanel()">Volver</button>
+        </div>
+
+        <!-- El panel interactivo gris ahora solo tendrá el scroll de las tarjetas -->
         <div class="interactive-panel">
             <div id="legendSection" style="font-size:12px; color:#64748b; text-align:center; margin-top:15px;">
                 <i class="fa-solid fa-circle-info" style="color:#4c2174;"></i> Selecciona un día marcado para ver las cirugías reales.
             </div>
             <div id="detailsSection" style="display:none;">
-                <button class="close-btn" onclick="closePanel()">Volver</button>
-                <h4 id="panelTitle" style="font-size:13px; color:#4c2174; margin-bottom:10px; text-transform:uppercase; font-weight:700;">Cirugías</h4>
                 <div id="cardsList"></div>
             </div>
         </div>
@@ -324,7 +363,7 @@
             }
         }
 
-        function showDay(claveFecha) {
+function showDay(claveFecha) {
             const dataList = databaseGlobal[claveFecha];
             if(!dataList || dataList.length === 0) return;
 
@@ -356,16 +395,18 @@
             document.getElementById('legendSection').style.display = 'none';
             document.getElementById('detailsSection').style.display = 'block';
             
-            // OCULTA EL BOTÓN cuando se entra al detalle de un día
+            // CAMBIO: Oculta botón actualizar y MUESTRA la nueva pestaña blanca fija
             document.getElementById('syncBtnContainer').style.display = 'none';
+            document.getElementById('fixedDetailsHeader').style.display = 'flex';
         }
 
         function closePanel() {
             document.getElementById('legendSection').style.display = 'block';
             document.getElementById('detailsSection').style.display = 'none';
             
-            // MUESTRA EL BOTÓN nuevamente al regresar al calendario
+            // CAMBIO: Muestra botón actualizar y OCULTA la pestaña blanca fija
             document.getElementById('syncBtnContainer').style.display = 'block';
+            document.getElementById('fixedDetailsHeader').style.display = 'none';
         }
     </script>
 </body>
