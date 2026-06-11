@@ -10,6 +10,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="A.png">
 <link rel="apple-touch-icon" sizes="180x180" href="A.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
@@ -36,14 +37,19 @@
         
         /* Encabezado más compacto */
         .app-header { 
-            background-color: #4c2174; 
-            color: #ffffff; 
+            background-color: #ACDCF2; 
+            color: #013857; 
             padding: 10px 15px; /* Reducido para ganar espacio vertical */
             text-align: center; 
-            border-bottom: 4px solid #000000; 
+            border-bottom: 4px solid #013857; 
             flex-shrink: 0;
         }
-        .app-header h1 { font-size: 24px; letter-spacing: 1px; font-weight: 700; } /* Letra optimizada */
+        .app-header h1 { 
+    		font-family: 'Orbitron', sans-serif; 
+    		font-size: 28px; 
+    		letter-spacing: 3px; 
+    		font-weight: 700; 
+	}
         .app-header p { font-size: 10px; opacity: 0.85; margin-top: 1px; font-style: italic; }
         
         /* Selectores de Fecha más estilizados y compactos */
@@ -117,8 +123,8 @@
         }
         .btn-sync {
             background-color: #ffffff;
-            color: #4c2174;
-            border: 1.5px solid #4c2174;
+            color: #013857;
+            border: 1.5px solid #83CCEB;
             padding: 6px 14px;
             border-radius: 20px;
             font-size: 11.5px;
@@ -162,10 +168,10 @@
         /* Etiquetas */
         .tag-group { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
         .mini-tag { font-size: 9.5px; background: #e2e8f0; color: #334155; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
-        .mini-tag.purple { background: #f3e8ff; color: #6b21a8; }
+        .mini-tag.purple { background: #E5F4FB; color: #011D2D; }
         
         /* Pantalla de Carga */
-        .loading-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); justify-content: center; align-items: center; font-weight: bold; color: #4c2174; z-index: 10; font-size: 14px; }
+        .loading-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); justify-content: center; align-items: center; font-weight: bold; color: #011D2D; z-index: 10; font-size: 14px; }
         .close-btn { background: #e2e8f0; border: none; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; cursor: pointer; float: right; color: #475569; }
         .close-btn:hover { background: #cbd5e1; }
 
@@ -182,7 +188,7 @@
 
         #panelTitle {
             font-size: 13px; 
-            color: #4c2174; 
+            color: #013857; 
             text-transform: uppercase; 
             font-weight: 700;
             margin: 0;
@@ -221,8 +227,8 @@
         <div id="loading" class="loading-overlay"><i class="fa-solid fa-spinner fa-spin fa-lg"></i>&nbsp; Actualizando Cartelera...</div>
 
         <div class="app-header">
-            <h1 style="font-size:32px; letter-spacing:1px;">ARTROGEN</h1>
-            <p>pasión por la ciencia...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;J-50010476-6</p>
+            <h1 style="font-size:32px; letter-spacing:1px;">PIEMCA</h1>
+            <p>INNOVACIÓN SIN FRONTERAS</p>
         </div>
 
         <div class="control-panel">
@@ -252,7 +258,7 @@
         <!-- El panel interactivo gris ahora solo tendrá el scroll de las tarjetas -->
         <div class="interactive-panel">
             <div id="legendSection" style="font-size:12px; color:#64748b; text-align:center; margin-top:15px;">
-                <i class="fa-solid fa-circle-info" style="color:#4c2174;"></i> Selecciona un día marcado para ver las cirugías reales.
+                <i class="fa-solid fa-circle-info" style="color:#83CCEB;"></i> Selecciona un día marcado para ver las cirugías reales.
             </div>
             <div id="detailsSection" style="display:none;">
                 <div id="cardsList"></div>
@@ -399,7 +405,7 @@
                 listContainer.innerHTML += `
                     <div class="${tarjetaClase}" style="border-left-color: ${bordeIzquierdoColor}">
                         <div class="card-time-row">
-                            <span style="color:#4c2174;" class="${horaEstiloClase}">
+                            <span style="color:#013857;" class="${horaEstiloClase}">
                                 <i class="fa-regular fa-clock"></i> ${c.hora}
                             </span>
                             <span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:6px; font-size:10.5px;">${c.est}</span>
