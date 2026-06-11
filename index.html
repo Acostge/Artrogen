@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#ACDCF2">
     <title>ARTROGEN - Calendario Quirúrgico</title>
-<link rel="manifest" href="./manifest.json">
+<link rel="manifest" href="./manifest.json?v=1.0">
 
 <link rel="icon" type="image/png" sizes="192x192" href="A.png">
 <link rel="icon" type="image/png" sizes="512x512" href="A.png">
@@ -438,5 +438,41 @@
             document.getElementById('fixedDetailsHeader').style.display = 'none';
         }
     </script>
+<script>
+    // Sistema de auto-actualización inteligente para evitar almacenar caché vieja
+    (function() {
+        // Cada vez que se abra la aplicación, verifica si hay una versión nueva en GitHub
+        window.addEventListener('load', function() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for(let registration of registrations) {
+                        // Forzar al service worker a buscar actualizaciones en el servidor
+                        registration.update();
+                    }
+                });
+            }
+        });
+
+        // Detecta si el archivo manifest o la aplicación cambió en el servidor
+        let lastCheck = localStorage.getItem('last_webapp_version');
+        let currentVersion = "2026.06.10.1"; // <-- CAMBIA ESTO cuando hagas una actualización fuerte
+
+        if (lastCheck && lastCheck !== currentVersion) {
+            localStorage.setItem('last_webapp_version', currentVersion);
+            // Limpia las cachés antiguas del navegador de forma interna
+            if ('caches' in window) {
+                caches.keys().then(function(names) {
+                    for (let name of names) caches.delete(name);
+                });
+            }
+            // Recarga la aplicación limpiando el sistema de raíz
+            setTimeout(() => {
+                window.location.reload(true);
+            }, 500);
+        } else {
+            localStorage.setItem('last_webapp_version', currentVersion);
+        }
+    })();
+</script>
 </body>
 </html>
