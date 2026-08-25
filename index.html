@@ -20,11 +20,10 @@
             margin: 0;
             padding: 0;
             background-color: #f4f6f9;
-            height: 100dvh; /* Alto exacto de la pantalla */
-            overflow: hidden; /* Evita scrolls generales indeseados */
+            height: 100dvh;
+            overflow: hidden;
         }
         
-        /* Contenedor principal móvil */
         .app-container {
             width: 100%;
             max-width: 600px;
@@ -36,10 +35,9 @@
             overflow: hidden;
         }
         
-        /* Encabezado optimizado para el Logo en imagen */
         .app-header { 
             background-color: #F7FDFF; 
-            padding: 8px 15px; /* Ajustado ligeramente para centrar verticalmente el logo */
+            padding: 8px 15px;
             text-align: center; 
             border-bottom: 4px solid #013857; 
             flex-shrink: 0;
@@ -49,7 +47,7 @@
         }
         
         .app-header img {
-            max-height: 70px; /* Altura máxima ideal para mantener la cabecera compacta */
+            max-height: 70px;
             width: auto;
             display: block;
         }
@@ -62,9 +60,8 @@
 	}
         .app-header p { font-size: 10px; opacity: 0.85; margin-top: 1px; font-style: italic; }
         
-        /* Selectores de Fecha más estilizados y compactos */
         .control-panel { 
-            padding: 8px 12px; /* Reducido de 12px a 8px */
+            padding: 8px 12px;
             display: flex; 
             gap: 10px; 
             background-color: #ffffff; 
@@ -74,26 +71,24 @@
         .select-box { flex: 1; padding: 6px; border-radius: 8px; border: 2px solid #cbd5e1; font-weight: bold; color: #334155; outline: none; cursor: pointer; font-size: 13px; }
         .select-box:focus { border-color: #4c2174; }
         
-        /* Días de la semana reducidos */
         .week-days { 
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
             text-align: center; 
             background-color: #f8fafc; 
-            padding: 6px 0; /* Reducido de 10px a 6px */
-            font-size: 10px; /* Letra ligeramente más pequeña */
+            padding: 6px 0;
+            font-size: 10px;
             font-weight: bold; 
             color: #64748b; 
             border-bottom: 1px solid #e2e8f0; 
             flex-shrink: 0;
         }
         
-        /* Matriz del Calendario más densa y compacta */
         .calendar-grid { 
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
-            padding: 6px; /* Reducido de 10px a 6px */
-            gap: 4px; /* Espacio entre celdas más estrecho */
+            padding: 6px;
+            gap: 4px;
             background: #ffffff; 
             flex-shrink: 0;
         }
@@ -105,27 +100,23 @@
             flex-direction: column; 
             justify-content: space-between; 
             padding: 4px; 
-            aspect-ratio: 1.15 / 1; /* Hace los cuadros ligeramente más chatos para ahorrar alto */
+            aspect-ratio: 1.15 / 1;
             cursor: pointer; 
             transition: all 0.2s; 
         }
         .day-cell:hover:not(.outside) { background-color: #f1f5f9; }
         .day-number { font-size: 11px; font-weight: bold; color: #334155; }
         
-        /* Días Grises */
         .day-cell.outside { background-color: #ffffff; border-color: #f1f5f9; cursor: default; }
         .day-cell.outside .day-number { color: #cbd5e1; font-weight: normal; }
         
-        /* Estados de Cirugía */
         .status-green { background-color: #2e7d32 !important; border-color: #1b5e20; }
         .status-green .day-number { color: #ffffff; }
         .status-red { background-color: #c62828 !important; border-color: #b71c1c; }
         .status-red .day-number { color: #ffffff; }
         
-        /* Indicador de cantidad dentro del día */
         .info-badge { font-size: 8px; font-weight: normal; background-color: rgba(255, 255, 255, 0.25); text-align: center; color: #ffffff; border-radius: 4px; padding: 1px; text-transform: uppercase; letter-spacing: 0.1px; }
         
-        /* Botón de Actualizar Cartelera */
         .sync-button-container {
             text-align: center;
             margin: 10px 0 5px 0;
@@ -151,7 +142,6 @@
             transform: scale(0.97);
         }
         
-        /* ZONA DE LECTURA MAXIMIZADA (SÚPER AMPLIA) */
         .interactive-panel { 
             flex-grow: 1; 
             background-color: #f8fafc; 
@@ -161,11 +151,10 @@
             -webkit-overflow-scrolling: touch; 
         }
         
-        /* Tarjetas optimizadas en espacio */
         .surgery-card { 
             background: #ffffff; 
             border-radius: 8px; 
-            padding: 10px 12px; /* Reducido el padding interno */
+            padding: 10px 12px;
             box-shadow: 0 2px 4px -1px rgba(0,0,0,0.04); 
             border: 1px solid #e2e8f0; 
             margin-bottom: 8px; 
@@ -175,25 +164,22 @@
         .card-field { font-size: 11.5px; margin-bottom: 4px; color: #334155; display: flex; align-items: flex-start; line-height: 1.3; }
         .card-field strong { color: #64748b; font-size: 11px; width: 100px; display: inline-block; flex-shrink: 0; }
         
-        /* Etiquetas */
         .tag-group { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
         .mini-tag { font-size: 9.5px; background: #e2e8f0; color: #334155; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
         .mini-tag.purple { background: #E5F4FB; color: #011D2D; }
         
-        /* Pantalla de Carga */
         .loading-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); justify-content: center; align-items: center; font-weight: bold; color: #011D2D; z-index: 10; font-size: 14px; }
         .close-btn { background: #e2e8f0; border: none; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; cursor: pointer; float: right; color: #475569; }
         .close-btn:hover { background: #cbd5e1; }
 
-        /* --- DISEÑO DE LA NUEVA BARRA FIJA DE CIRUGÍAS --- */
         .details-header-panel {
-            background-color: #ffffff; /* Fondo blanco como el panel de actualizar */
+            background-color: #ffffff;
             padding: 8px 16px;
             border-bottom: 1px solid #e2e8f0;
-            display: none; /* Se maneja dinámicamente */
+            display: none;
             justify-content: space-between;
             align-items: center;
-            flex-shrink: 0; /* Impide que se reduzca o se desplace */
+            flex-shrink: 0;
         }
 
         #panelTitle {
@@ -213,34 +199,31 @@
             font-weight: bold; 
             cursor: pointer; 
             color: #475569;
-            float: none; /* Quitamos el float viejo */
+            float: none;
         }
         .details-header-panel .close-btn:hover { background: #cbd5e1; }
 
-        /* --- ESTILOS PARA CIRUGÍAS SUSPENDIDAS --- */
         .surgery-card.card-suspended {
-            background-color: #ffebee !important; /* Rojo claro / Rosado suave */
-            border-left: 5px solid #c62828 !important; /* Borde izquierdo rojo intenso */
+            background-color: #ffebee !important;
+            border-left: 5px solid #c62828 !important;
             border-color: #FFBDC3;
         }
         
         .text-suspended {
-            font-weight: 900 !important; /* Texto en negrita resaltada */
-            color: #c62828 !important;   /* Color rojo quirúrgico de alerta */
+            font-weight: 900 !important;
+            color: #c62828 !important;
         }
 
-	/* --- ESTILOS PARA CIRUGÍAS DEVUELTAS --- */
         .surgery-card.card-returned {
-            background-color: #f1f5f9 !important; /* Fondo gris suave */
-            border-left: 5px solid #71717a !important; /* Borde gris oscuro */
+            background-color: #f1f5f9 !important;
+            border-left: 5px solid #71717a !important;
             border-color: #ADADAD;
         }
         
         .text-returned {
             font-weight: 900 !important;
-            color: #475569 !important; /* Texto en gris resaltado */
+            color: #475569 !important;
         }
-
     </style>
 </head>
 <body>
@@ -311,20 +294,16 @@
             renderCalendar();
         };
 
-        // Nueva función para ejecutar la sincronización desde el botón de manera fluida
         async function manualSync() {
             const btn = document.getElementById('syncBtn');
             const icon = document.getElementById('syncIcon');
             
-            // Efecto visual de carga exclusivo en el botón
             btn.disabled = true;
             icon.classList.add('fa-spin');
             btn.innerHTML = `<i class="fa-solid fa-sync fa-spin" id="syncIcon"></i> Sincronizando...`;
 
-            // Ejecuta el renderizado que vuelve a consultar la base de datos de Google Sheets
             await renderCalendar();
 
-            // Restablece el botón a su estado original
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-solid fa-sync" id="syncIcon"></i> Actualizar`;
         }
@@ -412,12 +391,10 @@
             dataList.forEach(c => {
                 let sistemasHtml = c.sistemas.filter(s => s.trim() !== "").map(s => `<span class="mini-tag purple"><i class="fa-solid fa-layer-group"></i> ${s.trim()}</span>`).join('');
 
-                // DETECCIÓN DE ESTADOS ESPECIALES
                 const valorHoraUpper = c.hora.trim().toUpperCase();
                 const esSuspendida = valorHoraUpper === "SUSPENDIDA";
                 const esDevuelto = valorHoraUpper === "DEVUELTO";
                 
-                // Asignamos las clases y estilos dinámicamente en base al estado
                 let tarjetaClase = "surgery-card";
                 let horaEstiloClase = "";
                 let bordeIzquierdoColor = claveFecha < new Date().toISOString().split('T')[0] ? '#c62828' : '#2e7d32';
@@ -432,6 +409,15 @@
                     bordeIzquierdoColor = '#71717a';
                 }
 
+                // Paciente + Cédula de Identidad integrada
+                let pacienteTexto = c.paciente || 'Por asignar';
+                if (c.ci && c.ci.trim() !== "") {
+                    pacienteTexto += ` (C.I. ${c.ci.trim()})`;
+                }
+
+                // Separación por Slash " / " para el Equipo
+                let equipoTexto = c.equipo.length > 0 ? c.equipo.join(' / ') : 'Por asignar';
+
                 listContainer.innerHTML += `
                     <div class="${tarjetaClase}" style="border-left-color: ${bordeIzquierdoColor}">
                         <div class="card-time-row">
@@ -442,8 +428,8 @@
                         </div>
                         <div class="card-field"><strong>🏥 Clínica:</strong> ${c.clinica}</div>
                         <div class="card-field"><strong>👨🏻‍⚕️ Doctor (a):</strong> ${c.medico}</div>
-                        <div class="card-field"><strong>👤 Paciente:</strong> ${c.paciente}</div>
-                        <div class="card-field"><strong>🚑 Inst. / Transp:</strong> ${c.equipo.join(', ')}</div>
+                        <div class="card-field"><strong>👤 Paciente:</strong> ${pacienteTexto}</div>
+                        <div class="card-field"><strong>🚑 Inst. / Transp:</strong> ${equipoTexto}</div>
                         <div class="card-field"><strong>📱 RDV:</strong> ${c.rdv || 'No asignado'}</div>
                         <div class="card-field"><strong>🔑 Aprobación:</strong> ${c.autorizacion || 'N/A'}</div>
                         ${sistemasHtml ? `<div class="tag-group">${sistemasHtml}</div>` : ''}
@@ -453,7 +439,6 @@
             document.getElementById('legendSection').style.display = 'none';
             document.getElementById('detailsSection').style.display = 'block';
             
-            // CAMBIO: Oculta botón actualizar y MUESTRA la nueva pestaña blanca fija
             document.getElementById('syncBtnContainer').style.display = 'none';
             document.getElementById('fixedDetailsHeader').style.display = 'flex';
         }
@@ -462,39 +447,32 @@
             document.getElementById('legendSection').style.display = 'block';
             document.getElementById('detailsSection').style.display = 'none';
             
-            // CAMBIO: Muestra botón actualizar y OCULTA la pestaña blanca fija
             document.getElementById('syncBtnContainer').style.display = 'block';
             document.getElementById('fixedDetailsHeader').style.display = 'none';
         }
     </script>
 <script>
-    // Sistema de auto-actualización inteligente para evitar almacenar caché vieja
     (function() {
-        // Cada vez que se abra la aplicación, verifica si hay una versión nueva en GitHub
         window.addEventListener('load', function() {
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(function(registrations) {
                     for(let registration of registrations) {
-                        // Forzar al service worker a buscar actualizaciones en el servidor
                         registration.update();
                     }
                 });
             }
         });
 
-        // Detecta si el archivo manifest o la aplicación cambió en el servidor
         let lastCheck = localStorage.getItem('last_webapp_version');
-        let currentVersion = "2026.06.20.1"; // <-- Se incrementó la versión para forzar actualización de caché interna
+        let currentVersion = "2026.08.25.1";
 
         if (lastCheck && lastCheck !== currentVersion) {
             localStorage.setItem('last_webapp_version', currentVersion);
-            // Limpia las cachés antiguas del navegador de forma interna
             if ('caches' in window) {
                 caches.keys().then(function(names) {
                     for (let name of names) caches.delete(name);
                 });
             }
-            // Recarga la aplicación limpiando el sistema de raíz
             setTimeout(() => {
                 window.location.reload(true);
             }, 500);
