@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#F7FDFF">
     <title>ARTROGEN - Calendario Quirúrgico</title>
-<link rel="manifest" href="./manifest.json?v=1.5">
+<link rel="manifest" href="./manifest.json?v=1.6">
 
 <link rel="icon" type="image/png" sizes="192x192" href="A.png">
 <link rel="icon" type="image/png" sizes="512x512" href="A.png">
@@ -227,7 +227,7 @@
 
 /* PEGAR AQUÍ EL ESTILO DEL BOTÓN PDF */
         .btn-pdf-header {
-            background-color: #013857;
+            background-color: #15803d; /* Verde = pendiente/planificado, aun sin certificado subido */
             color: #ffffff;
             border: none;
             padding: 3px 10px;
@@ -243,6 +243,9 @@
         .btn-pdf-header:active {
             transform: scale(0.96);
             opacity: 0.9;
+        }
+        .btn-pdf-header.cert-listo {
+            background-color: #b91c1c;
         }
 
 
@@ -451,7 +454,7 @@ listContainer.innerHTML += `
             </span>
             <div style="display: flex; align-items: center; gap: 6px;">
                 <span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:6px; font-size:10.5px; font-weight:bold;">${c.est}</span>
-                <button class="btn-pdf-header" onclick='descargarPdfCertificado(${index}, "${fechaFormateada}")'>
+                <button class="btn-pdf-header ${c.linkCertificado ? 'cert-listo' : ''}" onclick='verOSubirCertificado(${index}, "${fechaFormateada}")'>
                     <i class="fa-solid fa-file-pdf"></i> Certificado
                 </button>
             </div>
@@ -512,39 +515,17 @@ listContainer.innerHTML += `
         }
     })();
 
-    async function descargarPdfCertificado(index, fechaFormateada) {
-        const cirugia = cirugiasActuales[index]; // NUEVO: se recupera del array, no del HTML
-        document.getElementById('loading').style.display = 'flex';
-        
-        const params = new URLSearchParams({
-            action: 'pdf',
-            paciente: cirugia.paciente || '',
-            fecha: fechaFormateada,
-            ci: cirugia.ci || '',
-            clinica: cirugia.clinica || '',
-            edad: cirugia.edad || '',
-            instrumentista: cirugia.instrumentista || '',
-            medico: cirugia.medico || ''
-        });
+    // NUEVO: reemplaza a descargarPdfCertificado(). Ya no se genera el PDF, se enlaza
+    // al certificado firmado/escaneado que se sube manualmente a Drive (columna N del Sheet).
+    function verOSubirCertificado(index, fechaFormateada) {
+        const cirugia = cirugiasActuales[index];
 
-        try {
-            let resp = await fetch(`${WEB_APP_URL}?${params.toString()}`);
-            let json = await resp.json();
-            
-            if (json.pdf) {
-                let a = document.createElement("a");
-                a.href = json.pdf;
-                a.download = `Certificado_Implantes_${cirugia.paciente || 'Qx'}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            } else {
-                alert("No se pudo generar el documento PDF.");
-            }
-        } catch (err) {
-            alert("Error de conexión al generar PDF.");
-        } finally {
-            document.getElementById('loading').style.display = 'none';
+        if (cirugia.linkCertificado) {
+            // Ya existe el PDF firmado en Drive -> lo abrimos en pestaña nueva
+            window.open(cirugia.linkCertificado, '_blank');
+        } else {
+            // Aún no se ha subido el certificado de esta cirugía
+            alert("Todavía no se ha subido el certificado firmado de esta cirugía.\n\nSube el PDF escaneado a la carpeta de Drive y pega el enlace en la columna 'Link Certificado' del Sheet.");
         }
     }
 </script>
