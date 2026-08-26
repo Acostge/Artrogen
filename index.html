@@ -498,7 +498,7 @@ listContainer.innerHTML += `
         });
 
         let lastCheck = localStorage.getItem('last_webapp_version');
-        let currentVersion = "2026.08.26.1";
+        let currentVersion = "2026.08.25.1";
 
         if (lastCheck && lastCheck !== currentVersion) {
             localStorage.setItem('last_webapp_version', currentVersion);
@@ -515,17 +515,49 @@ listContainer.innerHTML += `
         }
     })();
 
-    // NUEVO: reemplaza a descargarPdfCertificado(). Ya no se genera el PDF, se enlaza
-    // al certificado firmado/escaneado que se sube manualmente a Drive (columna N del Sheet).
-    function verOSubirCertificado(index, fechaFormateada) {
+    // Verde (sin link en Drive) -> descarga el certificado EN BLANCO para llenarlo a mano (igual que antes).
+    // Rojo (con link en Drive)   -> abre el certificado YA FIRMADO/escaneado que se subió a Drive.
+    async function verOSubirCertificado(index, fechaFormateada) {
         const cirugia = cirugiasActuales[index];
 
         if (cirugia.linkCertificado) {
             // Ya existe el PDF firmado en Drive -> lo abrimos en pestaña nueva
             window.open(cirugia.linkCertificado, '_blank');
-        } else {
-            // Aún no se ha subido el certificado de esta cirugía
-            alert("Todavía no se ha subido el certificado firmado de esta cirugía.\n\nSube el PDF escaneado a la carpeta de Drive y pega el enlace en la columna 'Link Certificado' del Sheet.");
+            return;
+        }
+
+        // Aún no se ha subido el certificado firmado -> generamos y descargamos el certificado en blanco
+        document.getElementById('loading').style.display = 'flex';
+
+        const params = new URLSearchParams({
+            action: 'pdf',
+            paciente: cirugia.paciente || '',
+            fecha: fechaFormateada,
+            ci: cirugia.ci || '',
+            clinica: cirugia.clinica || '',
+            edad: cirugia.edad || '',
+            instrumentista: cirugia.instrumentista || '',
+            medico: cirugia.medico || ''
+        });
+
+        try {
+            let resp = await fetch(`${WEB_APP_URL}?${params.toString()}`);
+            let json = await resp.json();
+
+            if (json.pdf) {
+                let a = document.createElement("a");
+                a.href = json.pdf;
+                a.download = `Certificado_Implantes_${cirugia.paciente || 'Qx'}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } else {
+                alert("No se pudo generar el documento PDF.");
+            }
+        } catch (err) {
+            alert("Error de conexión al generar PDF.");
+        } finally {
+            document.getElementById('loading').style.display = 'none';
         }
     }
 </script>
