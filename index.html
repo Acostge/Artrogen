@@ -383,7 +383,8 @@
             if(!dataList || dataList.length === 0) return;
 
             const partes = claveFecha.split('-');
-            document.getElementById('panelTitle').innerText = `Cirugías del ${partes[2]}/${partes[1]}/${partes[0]}`;
+            const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
+            document.getElementById('panelTitle').innerText = `Cirugías del ${fechaFormateada}`;
             
             const listContainer = document.getElementById('cardsList');
             listContainer.innerHTML = ''; 
@@ -433,6 +434,12 @@
                         <div class="card-field"><strong>📱 RDV:</strong> ${c.rdv || 'No asignado'}</div>
                         <div class="card-field"><strong>🔑 Aprobación:</strong> ${c.autorizacion || 'N/A'}</div>
                         ${sistemasHtml ? `<div class="tag-group">${sistemasHtml}</div>` : ''}
+                        
+                        <div style="margin-top: 10px; text-align: right;">
+                            <button class="btn-sync" onclick='descargarPdfCertificado(${JSON.stringify(c)}, "${fechaFormateada}")' style="font-size: 10px; padding: 4px 10px; background-color: #013857; color: white; border: none; border-radius: 4px;">
+                                <i class="fa-solid fa-file-pdf"></i> Descargar Certificado PDF
+                            </button>
+                        </div>
                     </div>`;
             });
 
@@ -451,6 +458,7 @@
             document.getElementById('fixedDetailsHeader').style.display = 'none';
         }
     </script>
+
 <script>
     (function() {
         window.addEventListener('load', function() {
@@ -480,6 +488,41 @@
             localStorage.setItem('last_webapp_version', currentVersion);
         }
     })();
+
+    async function descargarPdfCertificado(cirugia, fechaFormateada) {
+        document.getElementById('loading').style.display = 'flex';
+        
+        const params = new URLSearchParams({
+            action: 'pdf',
+            paciente: cirugia.paciente || '',
+            fecha: fechaFormateada,
+            ci: cirugia.ci || '',
+            clinica: cirugia.clinica || '',
+            edad: cirugia.edad || '',
+            instrumentista: cirugia.instrumentista || '',
+            medico: cirugia.medico || ''
+        });
+
+        try {
+            let resp = await fetch(`${WEB_APP_URL}?${params.toString()}`);
+            let json = await resp.json();
+            
+            if (json.pdf) {
+                let a = document.createElement("a");
+                a.href = json.pdf;
+                a.download = `Certificado_Implantes_${cirugia.paciente || 'Qx'}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } else {
+                alert("No se pudo generar el documento PDF.");
+            }
+        } catch (err) {
+            alert("Error de conexión al generar PDF.");
+        } finally {
+            document.getElementById('loading').style.display = 'none';
+        }
+    }
 </script>
 </body>
 </html>
