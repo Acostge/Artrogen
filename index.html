@@ -294,6 +294,7 @@
 
         const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
         let databaseGlobal = {}; 
+        let cirugiasActuales = []; // NUEVO: guarda las cirugías del día visible, para no meter JSON en el onclick
 
         window.onload = function() {
             const mSelect = document.getElementById('monthSelect');
@@ -403,6 +404,7 @@
         function showDay(claveFecha) {
             const dataList = databaseGlobal[claveFecha];
             if(!dataList || dataList.length === 0) return;
+            cirugiasActuales = dataList; // NUEVO
 
             const partes = claveFecha.split('-');
             const fechaFormateada = `${partes[2]}/${partes[1]}/${partes[0]}`;
@@ -411,7 +413,7 @@
             const listContainer = document.getElementById('cardsList');
             listContainer.innerHTML = ''; 
 
-            dataList.forEach(c => {
+            dataList.forEach((c, index) => {
                 let sistemasHtml = c.sistemas.filter(s => s.trim() !== "").map(s => `<span class="mini-tag purple"><i class="fa-solid fa-layer-group"></i> ${s.trim()}</span>`).join('');
 
                 const valorHoraUpper = c.hora.trim().toUpperCase();
@@ -449,8 +451,8 @@ listContainer.innerHTML += `
             </span>
             <div style="display: flex; align-items: center; gap: 6px;">
                 <span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:6px; font-size:10.5px; font-weight:bold;">${c.est}</span>
-                <button class="btn-pdf-header" onclick='descargarPdfCertificado(${JSON.stringify(c)}, "${fechaFormateada}")'>
-                    <i class="fa-solid fa-file-pdf"></i> Certificado PDF
+                <button class="btn-pdf-header" onclick='descargarPdfCertificado(${index}, "${fechaFormateada}")'>
+                    <i class="fa-solid fa-file-pdf"></i> Certificado
                 </button>
             </div>
         </div>
@@ -510,7 +512,8 @@ listContainer.innerHTML += `
         }
     })();
 
-    async function descargarPdfCertificado(cirugia, fechaFormateada) {
+    async function descargarPdfCertificado(index, fechaFormateada) {
+        const cirugia = cirugiasActuales[index]; // NUEVO: se recupera del array, no del HTML
         document.getElementById('loading').style.display = 'flex';
         
         const params = new URLSearchParams({
