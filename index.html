@@ -441,28 +441,27 @@
                 // Separación por Slash " / " para el Equipo
                 let equipoTexto = c.equipo.length > 0 ? c.equipo.join(' / ') : 'Por asignar';
 
-                listContainer.innerHTML += `
-                    <div class="${tarjetaClase}" style="border-left-color: ${bordeIzquierdoColor}">
-                        <div class="card-time-row">
-                            <span style="color:#013857;" class="${horaEstiloClase}">
-                                <i class="fa-regular fa-clock"></i> ${c.hora}
-                            </span>
-                            <span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:6px; font-size:10.5px;">${c.est}</span>
-                        </div>
-                        <div class="card-field"><strong>🏥 Clínica:</strong> ${c.clinica}</div>
-                        <div class="card-field"><strong>👨🏻‍⚕️ Doctor (a):</strong> ${c.medico}</div>
-                        <div class="card-field"><strong>👤 Paciente:</strong> ${pacienteTexto}</div>
-                        <div class="card-field"><strong>🚑 Inst. / Transp:</strong> ${equipoTexto}</div>
-                        <div class="card-field"><strong>📱 RDV:</strong> ${c.rdv || 'No asignado'}</div>
-                        <div class="card-field"><strong>🔑 Aprobación:</strong> ${c.autorizacion || 'N/A'}</div>
-                        ${sistemasHtml ? `<div class="tag-group">${sistemasHtml}</div>` : ''}
-                        
-                        <div style="margin-top: 10px; text-align: right;">
-                            <button class="btn-sync" onclick='descargarPdfCertificado(${JSON.stringify(c)}, "${fechaFormateada}")' style="font-size: 10px; padding: 4px 10px; background-color: #013857; color: white; border: none; border-radius: 4px;">
-                                <i class="fa-solid fa-file-pdf"></i> Descargar Certificado PDF
-                            </button>
-                        </div>
-                    </div>`;
+listContainer.innerHTML += `
+    <div class="${tarjetaClase}" style="border-left-color: ${bordeIzquierdoColor}">
+        <div class="card-time-row">
+            <span style="color:#013857;" class="${horaEstiloClase}">
+                <i class="fa-regular fa-clock"></i> ${c.hora}
+            </span>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:6px; font-size:10.5px; font-weight:bold;">${c.est}</span>
+                <button class="btn-pdf-header" onclick='descargarPdfCertificado(${JSON.stringify(c)}, "${fechaFormateada}")'>
+                    <i class="fa-solid fa-file-pdf"></i> Certificado PDF
+                </button>
+            </div>
+        </div>
+        <div class="card-field"><strong>🏥 Clínica:</strong> ${c.clinica}</div>
+        <div class="card-field"><strong>👨🏻‍⚕️ Doctor (a):</strong> ${c.medico}</div>
+        <div class="card-field"><strong>👤 Paciente:</strong> ${pacienteTexto}</div>
+        <div class="card-field"><strong>🚑 Inst. / Transp:</strong> ${equipoTexto}</div>
+        <div class="card-field"><strong>📱 RDV:</strong> ${c.rdv || 'No asignado'}</div>
+        <div class="card-field"><strong>🔑 Aprobación:</strong> ${c.autorizacion || 'N/A'}</div>
+        ${sistemasHtml ? `<div class="tag-group">${sistemasHtml}</div>` : ''}
+    </div>`;
             });
 
             document.getElementById('legendSection').style.display = 'none';
