@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#F7FDFF">
     <title>ARTROGEN - Calendario Quirúrgico</title>
-<link rel="manifest" href="./manifest.json?v=1.5">
+<link rel="manifest" href="./manifest.json?v=1.6">
 
 <link rel="icon" type="image/png" sizes="192x192" href="A.png">
 <link rel="icon" type="image/png" sizes="512x512" href="A.png">
@@ -515,7 +515,7 @@ listContainer.innerHTML += `
         }
     })();
 
-    // Verde (sin link en Drive) -> descarga el certificado EN BLANCO para llenarlo a mano (igual que antes).
+    // Verde (sin link en Drive) -> abre el certificado EN BLANCO para llenarlo a mano (ya no se descarga solo).
     // Rojo (con link en Drive)   -> abre el certificado YA FIRMADO/escaneado que se subió a Drive.
     async function verOSubirCertificado(index, fechaFormateada) {
         const cirugia = cirugiasActuales[index];
@@ -526,7 +526,13 @@ listContainer.innerHTML += `
             return;
         }
 
-        // Aún no se ha subido el certificado firmado -> generamos y descargamos el certificado en blanco
+        // Abrimos la pestaña YA MISMO, en el mismo clic del usuario (esto evita que el navegador
+        // la bloquee como pop-up, ya que ocurre antes del fetch asíncrono). La llenamos después.
+        const pestanaNueva = window.open('', '_blank');
+        if (pestanaNueva) {
+            pestanaNueva.document.write('<p style="font-family:sans-serif;padding:20px;color:#475569;">Generando certificado...</p>');
+        }
+
         document.getElementById('loading').style.display = 'flex';
 
         const params = new URLSearchParams({
@@ -545,16 +551,29 @@ listContainer.innerHTML += `
             let json = await resp.json();
 
             if (json.pdf) {
-                let a = document.createElement("a");
-                a.href = json.pdf;
-                a.download = `Certificado_Implantes_${cirugia.paciente || 'Qx'}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
+                // Convertimos el PDF en Blob y lo cargamos en la pestaña que ya abrimos.
+                const base64Data = json.pdf.split(',')[1]; // quitamos el prefijo "data:application/pdf;base64,"
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let n = 0; n < byteCharacters.length; n++) {
+                    byteNumbers[n] = byteCharacters.charCodeAt(n);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'application/pdf' });
+                const blobUrl = URL.createObjectURL(blob);
+
+                if (pestanaNueva) {
+                    pestanaNueva.location.href = blobUrl;
+                } else {
+                    // El navegador bloqueó la pestaña de todas formas (poco común) -> lo intentamos de nuevo
+                    window.open(blobUrl, '_blank');
+                }
             } else {
+                if (pestanaNueva) pestanaNueva.close();
                 alert("No se pudo generar el documento PDF.");
             }
         } catch (err) {
+            if (pestanaNueva) pestanaNueva.close();
             alert("Error de conexión al generar PDF.");
         } finally {
             document.getElementById('loading').style.display = 'none';
