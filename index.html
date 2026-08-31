@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#F7FDFF">
     <title>ARTROGEN - Calendario Quirúrgico</title>
-<link rel="manifest" href="./manifest.json?v=1.6">
+<link rel="manifest" href="./manifest.json?v=1.5">
 
 <link rel="icon" type="image/png" sizes="192x192" href="A.png">
 <link rel="icon" type="image/png" sizes="512x512" href="A.png">
@@ -559,8 +559,9 @@ listContainer.innerHTML += `
                     byteNumbers[n] = byteCharacters.charCodeAt(n);
                 }
                 const byteArray = new Uint8Array(byteNumbers);
-                const blob = new Blob([byteArray], { type: 'application/pdf' });
-                const blobUrl = URL.createObjectURL(blob);
+                const nombreArchivo = `Certificado de Implantes - ${cirugia.paciente || 'Paciente'}.pdf`;
+                const file = new File([byteArray], nombreArchivo, { type: 'application/pdf' });
+                const blobUrl = URL.createObjectURL(file);
 
                 if (pestanaNueva) {
                     pestanaNueva.location.href = blobUrl;
