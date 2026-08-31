@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#F7FDFF">
     <title>ARTROGEN - Calendario Quirúrgico</title>
-<link rel="manifest" href="./manifest.json?v=1.5">
+<link rel="manifest" href="./manifest.json?v=1.9">
 
 <link rel="icon" type="image/png" sizes="192x192" href="A.png">
 <link rel="icon" type="image/png" sizes="512x512" href="A.png">
@@ -498,7 +498,7 @@ listContainer.innerHTML += `
         });
 
         let lastCheck = localStorage.getItem('last_webapp_version');
-        let currentVersion = "2026.08.25.1";
+        let currentVersion = "2026.08.30.1";
 
         if (lastCheck && lastCheck !== currentVersion) {
             localStorage.setItem('last_webapp_version', currentVersion);
@@ -559,12 +559,21 @@ listContainer.innerHTML += `
                     byteNumbers[n] = byteCharacters.charCodeAt(n);
                 }
                 const byteArray = new Uint8Array(byteNumbers);
-                const nombreArchivo = `Certificado de Implantes - ${cirugia.paciente || 'Paciente'}.pdf`;
-                const file = new File([byteArray], nombreArchivo, { type: 'application/pdf' });
-                const blobUrl = URL.createObjectURL(file);
+                const blob = new Blob([byteArray], { type: 'application/pdf' });
+                const blobUrl = URL.createObjectURL(blob);
+                const tituloPagina = `Certificado de Implantes - ${cirugia.paciente || 'Paciente'}`;
 
                 if (pestanaNueva) {
-                    pestanaNueva.location.href = blobUrl;
+                    // Armamos una páginita HTML propia con el título que queremos, y el PDF adentro
+                    // en un iframe -> así el título de la pestaña no depende de cómo cada navegador
+                    // (Chrome Android, Safari, etc.) interprete el nombre del archivo.
+                    pestanaNueva.document.open();
+                    pestanaNueva.document.write(
+                        '<!DOCTYPE html><html><head><title>' + tituloPagina + '</title>' +
+                        '<style>html,body{margin:0;padding:0;height:100%;}iframe{width:100%;height:100%;border:none;}</style>' +
+                        '</head><body><iframe src="' + blobUrl + '"></iframe></body></html>'
+                    );
+                    pestanaNueva.document.close();
                 } else {
                     // El navegador bloqueó la pestaña de todas formas (poco común) -> lo intentamos de nuevo
                     window.open(blobUrl, '_blank');
