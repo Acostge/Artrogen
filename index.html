@@ -141,7 +141,11 @@
             background-color: #f3e8ff;
             transform: scale(0.97);
         }
-        .sync-button-container { display: flex; justify-content: center; align-items: center; gap: 10px; }
+        /* Tres botones: Registro (izquierda) · Actualizar (centro) · Aprobación (derecha) */
+        .sync-button-container { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 0 12px; }
+        .sync-button-container #registroBtn { justify-self: start; }
+        .sync-button-container #aprobacionBtn { justify-self: end; }
+        .sync-button-container .btn-sync { white-space: nowrap; }
 
         /* ===== REGISTRO DE CIRUGÍAS (ventanas emergentes) ===== */
         .modal-overlay {
@@ -221,6 +225,26 @@
         /* Hora compacta: 3 listas pequeñas en lugar del reloj grande del sistema */
         .hora-row { display: flex; gap: 6px; }
         .hora-row select { flex: 1; min-width: 0; padding: 8px 6px; }
+
+        /* Registro y Aprobación comparten exactamente el mismo tamaño de ventana */
+        .modal-box.modal-fijo { height: min(94dvh, 700px); }
+
+        /* ===== Ventana de Aprobación ===== */
+        .apr-body { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+        .apr-lista { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 2px 0 6px; }
+        .apr-vacio { text-align: center; font-size: 12px; color: #64748b; padding: 26px 8px; }
+        .apr-input {
+            flex: 1; min-width: 0;
+            padding: 6px 8px;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #334155;
+            outline: none;
+            background: #ffffff;
+        }
+        .apr-input:focus { border-color: #83CCEB; }
+        .apr-lista .card-field { align-items: center; }
         
         .interactive-panel { 
             flex-grow: 1; 
@@ -358,6 +382,9 @@
             <button class="btn-sync" id="syncBtn" onclick="manualSync()">
                 <i class="fa-solid fa-sync" id="syncIcon"></i> Actualizar
             </button>
+            <button class="btn-sync" id="aprobacionBtn" onclick="abrirAprobacion()">
+                <i class="fa-solid fa-clipboard-check"></i> Aprobación
+            </button>
         </div>
 
         <div class="details-header-panel" id="fixedDetailsHeader">
@@ -395,7 +422,7 @@
 
     <!-- ===== Ventana 2: formulario de registro ===== -->
     <div class="modal-overlay" id="regModal">
-        <div class="modal-box">
+        <div class="modal-box modal-fijo">
             <div class="modal-title"><i class="fa-solid fa-pen-to-square"></i> Registrar cirugía</div>
             <div class="modal-body">
                 <div class="form-field"><label for="rFecha">Fecha</label><input type="date" id="rFecha"></div>
@@ -438,6 +465,25 @@
             <div class="modal-actions">
                 <button class="btn-cancelar" id="regCancelBtn" onclick="cerrarModales()">Cancelar</button>
                 <button class="btn-aceptar" id="regOkBtn" onclick="guardarRegistro()"><i class="fa-solid fa-check"></i> Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Ventana 3: Aprobación (casos sin aprobación de la fecha elegida) ===== -->
+    <div class="modal-overlay" id="aprModal">
+        <div class="modal-box modal-fijo">
+            <div class="modal-title"><i class="fa-solid fa-clipboard-check"></i> Aprobación</div>
+            <div class="modal-body apr-body">
+                <div class="form-field">
+                    <label for="aFecha">Fecha</label>
+                    <input type="date" id="aFecha" onchange="cargarPendientes()">
+                </div>
+                <div class="apr-lista" id="aLista"></div>
+                <div class="modal-msg" id="aMsg"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancelar" id="aprCerrarBtn" onclick="cerrarAprobacion()">Cerrar</button>
+                <button class="btn-aceptar" id="aprOkBtn" onclick="guardarAprobaciones()" disabled><i class="fa-solid fa-check"></i> Aceptar</button>
             </div>
         </div>
     </div>
@@ -641,7 +687,20 @@ listContainer.innerHTML += `
             return await resp.json();
         }
 
+        // 'registro' o 'aprobacion': define qué contraseña se valida y qué ventana se abre después
+        let modoClave = 'registro';
+
+        function abrirAprobacion() {
+            modoClave = 'aprobacion';
+            abrirVentanaClave();
+        }
+
         function abrirRegistro() {
+            modoClave = 'registro';
+            abrirVentanaClave();
+        }
+
+        function abrirVentanaClave() {
             claveTemporal = "";
             document.getElementById('passInput').value = "";
             document.getElementById('passMsg').innerText = "";
@@ -654,6 +713,16 @@ listContainer.innerHTML += `
             document.getElementById('passInput').value = "";
             document.getElementById('passModal').style.display = 'none';
             document.getElementById('regModal').style.display = 'none';
+            document.getElementById('aprModal').style.display = 'none';
+            peticionApr++;            // descarta cualquier búsqueda de pendientes en curso
+            pendientesApr = [];
+        }
+
+        function cerrarAprobacion() {
+            const huboCambios = aprCambios;
+            aprCambios = false;
+            cerrarModales();
+            if (huboCambios) renderCalendar();   // refresca el calendario con las aprobaciones nuevas
         }
 
         async function verificarClave() {
@@ -666,12 +735,14 @@ listContainer.innerHTML += `
             msg.style.color = '#64748b';
             msg.innerText = "Verificando...";
             try {
-                const r = await enviarAlServidor({ action: 'verificar', clave: clave });
+                const accion = (modoClave === 'aprobacion') ? 'verificarAprobacion' : 'verificar';
+                const r = await enviarAlServidor({ action: accion, clave: clave });
                 if (r.ok) {
                     claveTemporal = clave;
                     document.getElementById('passInput').value = "";
                     document.getElementById('passModal').style.display = 'none';
-                    prepararFormulario();
+                    if (modoClave === 'aprobacion') prepararAprobacion();
+                    else prepararFormulario();
                 } else {
                     msg.style.color = '#c62828';
                     msg.innerText = r.claveIncorrecta ? "Contraseña incorrecta." : (r.error || "No se pudo verificar.");
@@ -762,11 +833,157 @@ listContainer.innerHTML += `
             }
         }
 
+        // ===================== APROBACIÓN =====================
+        let pendientesApr = [];
+        let peticionApr = 0;
+        let aprCambios = false;
+
+        function esc(t) {
+            return String(t == null ? "" : t).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        }
+
+        function fechaHoyISO() {
+            const h = new Date();
+            return `${h.getFullYear()}-${String(h.getMonth() + 1).padStart(2, '0')}-${String(h.getDate()).padStart(2, '0')}`;
+        }
+
+        function prepararAprobacion() {
+            document.getElementById('aFecha').value = fechaHoyISO();
+            document.getElementById('aLista').innerHTML = '';
+            document.getElementById('aMsg').innerText = '';
+            aprCambios = false;
+            document.getElementById('aprModal').style.display = 'flex';
+            cargarPendientes();
+        }
+
+        async function cargarPendientes(mantenerMensaje) {
+            const fecha = document.getElementById('aFecha').value;
+            const lista = document.getElementById('aLista');
+            const msg = document.getElementById('aMsg');
+            const okBtn = document.getElementById('aprOkBtn');
+            const miPeticion = ++peticionApr;
+
+            okBtn.disabled = true;
+            pendientesApr = [];
+            if (!mantenerMensaje) msg.innerText = '';
+            if (!fecha) { lista.innerHTML = ''; return; }
+
+            lista.innerHTML = '<div class="apr-vacio"><i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Buscando cirugías sin aprobación...</div>';
+            try {
+                const r = await enviarAlServidor({ action: 'pendientesAprobacion', clave: claveTemporal, fecha: fecha });
+                if (miPeticion !== peticionApr) return;   // se eligió otra fecha o se cerró la ventana
+                if (!r.ok) {
+                    lista.innerHTML = '';
+                    msg.style.color = '#c62828';
+                    msg.innerText = r.claveIncorrecta ? "Contraseña incorrecta." : (r.error || "No se pudo consultar.");
+                    return;
+                }
+                pendientesApr = r.lista || [];
+                dibujarPendientes(fecha);
+            } catch (err) {
+                if (miPeticion !== peticionApr) return;
+                lista.innerHTML = '';
+                msg.style.color = '#c62828';
+                msg.innerText = "Error de conexión. Intente de nuevo.";
+            }
+        }
+
+        function dibujarPendientes(fecha) {
+            const lista = document.getElementById('aLista');
+            const okBtn = document.getElementById('aprOkBtn');
+
+            if (pendientesApr.length === 0) {
+                lista.innerHTML = '<div class="apr-vacio"><i class="fa-solid fa-circle-check" style="color:#2e7d32;"></i>&nbsp; No hay cirugías pendientes de aprobación en esta fecha.</div>';
+                okBtn.disabled = true;
+                return;
+            }
+
+            const pasada = fecha < fechaHoyISO();
+            lista.innerHTML = pendientesApr.map((c, i) => {
+                const hora = String(c.hora || 'Sin hora');
+                const horaUp = hora.trim().toUpperCase();
+                let clase = 'surgery-card';
+                let horaClase = '';
+                let borde = pasada ? '#c62828' : '#2e7d32';
+                if (horaUp === 'SUSPENDIDA') { clase += ' card-suspended'; horaClase = 'text-suspended'; borde = '#c62828'; }
+                else if (horaUp === 'DEVUELTO') { clase += ' card-returned'; horaClase = 'text-returned'; borde = '#71717a'; }
+
+                let pacienteTexto = c.paciente || 'Por asignar';
+                if (c.ci && String(c.ci).trim() !== '') pacienteTexto += `, C.I. ${String(c.ci).trim()}`;
+                const equipo = [c.instrumentista, c.transportista].filter(x => x && String(x).trim() !== '').join(' / ') || 'Por asignar';
+                const tags = (c.sistemas || []).filter(s => String(s).trim() !== '')
+                    .map(s => `<span class="mini-tag purple"><i class="fa-solid fa-layer-group"></i> ${esc(String(s).trim())}</span>`).join('');
+
+                return `
+                <div class="${clase}" style="border-left-color: ${borde}">
+                    <div class="card-time-row">
+                        <span style="color:#013857;" class="${horaClase}"><i class="fa-regular fa-clock"></i> ${esc(hora)}</span>
+                        <span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:6px; font-size:10.5px; font-weight:bold;">${esc(c.est || 'Pendiente')}</span>
+                    </div>
+                    <div class="card-field"><strong>🏥 Clínica:</strong> ${esc(c.clinica)}</div>
+                    <div class="card-field"><strong>👨🏻‍⚕️ Doctor (a):</strong> ${esc(c.medico)}</div>
+                    <div class="card-field"><strong>👤 Paciente:</strong> ${esc(pacienteTexto)}</div>
+                    <div class="card-field"><strong>🚑 Inst. / Transp:</strong> ${esc(equipo)}</div>
+                    <div class="card-field"><strong>📱 RDV:</strong> ${esc(c.rdv || 'No asignado')}</div>
+                    <div class="card-field"><strong>🔑 Aprobación:</strong> <input type="text" class="apr-input" id="aprInput_${i}" maxlength="300" autocomplete="off"></div>
+                    ${tags ? `<div class="tag-group">${tags}</div>` : ''}
+                </div>`;
+            }).join('');
+            okBtn.disabled = false;
+        }
+
+        async function guardarAprobaciones() {
+            const msg = document.getElementById('aMsg');
+            const okBtn = document.getElementById('aprOkBtn');
+            const cerrarBtn = document.getElementById('aprCerrarBtn');
+            const fecha = document.getElementById('aFecha').value;
+
+            const items = [];
+            pendientesApr.forEach((c, i) => {
+                const el = document.getElementById('aprInput_' + i);
+                const texto = el ? el.value.trim() : '';
+                if (texto) items.push({ filaId: c.filaId, paciente: c.paciente || '', hora: c.hora || '', texto: texto });
+            });
+
+            if (items.length === 0) {
+                msg.style.color = '#c62828';
+                msg.innerText = "Escriba la aprobación en al menos un caso.";
+                return;
+            }
+
+            okBtn.disabled = true;
+            cerrarBtn.disabled = true;
+            msg.style.color = '#64748b';
+            msg.innerText = "Guardando...";
+            try {
+                const r = await enviarAlServidor({ action: 'guardarAprobacion', clave: claveTemporal, fecha: fecha, items: items });
+                if (r.ok) {
+                    if (r.guardadas > 0) aprCambios = true;
+                    let texto = r.guardadas === 1 ? "✓ 1 aprobación guardada." : `✓ ${r.guardadas} aprobaciones guardadas.`;
+                    const omitidas = r.omitidas || [];
+                    if (omitidas.length > 0) texto += " No se guardó: " + omitidas.join("; ") + ".";
+                    await cargarPendientes(true);          // muestra solo los que siguen sin aprobación
+                    msg.style.color = omitidas.length > 0 ? '#c62828' : '#2e7d32';
+                    msg.innerText = texto;
+                } else {
+                    msg.style.color = '#c62828';
+                    msg.innerText = r.claveIncorrecta ? "Contraseña incorrecta." : (r.error || "No se pudo guardar.");
+                    okBtn.disabled = false;
+                }
+            } catch (err) {
+                msg.style.color = '#c62828';
+                msg.innerText = "Error de conexión. No se guardó nada.";
+                okBtn.disabled = false;
+            } finally {
+                cerrarBtn.disabled = false;
+            }
+        }
+
         function closePanel() {
             document.getElementById('legendSection').style.display = 'block';
             document.getElementById('detailsSection').style.display = 'none';
-            
-            document.getElementById('syncBtnContainer').style.display = 'flex';
+
+            document.getElementById('syncBtnContainer').style.display = 'grid';
             document.getElementById('fixedDetailsHeader').style.display = 'none';
         }
     </script>
@@ -784,7 +1001,7 @@ listContainer.innerHTML += `
         });
 
         let lastCheck = localStorage.getItem('last_webapp_version');
-        let currentVersion = "2026.10.07.2";
+        let currentVersion = "2026.10.07.3";
 
         if (lastCheck && lastCheck !== currentVersion) {
             localStorage.setItem('last_webapp_version', currentVersion);
