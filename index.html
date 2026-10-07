@@ -141,6 +141,78 @@
             background-color: #f3e8ff;
             transform: scale(0.97);
         }
+        .sync-button-container { display: flex; justify-content: center; align-items: center; gap: 10px; }
+
+        /* ===== REGISTRO DE CIRUGÍAS (ventanas emergentes) ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(1, 56, 87, 0.45);
+            z-index: 50;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+        }
+        .modal-box {
+            background: #ffffff;
+            width: 100%;
+            max-width: 420px;
+            max-height: 94dvh;
+            border-radius: 14px;
+            border-top: 4px solid #013857;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .modal-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #013857;
+            text-transform: uppercase;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .modal-body { padding: 12px 16px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .form-field { margin-bottom: 9px; }
+        .form-field label { display: block; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 3px; }
+        .form-field input, .form-field select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #334155;
+            outline: none;
+            background: #ffffff;
+        }
+        .form-field input:focus, .form-field select:focus { border-color: #83CCEB; }
+        .form-row { display: flex; gap: 10px; }
+        .form-row .form-field { flex: 1; min-width: 0; }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 12px 16px;
+            border-top: 1px solid #e2e8f0;
+            flex-shrink: 0;
+        }
+        .btn-cancelar {
+            background: #e2e8f0; color: #475569; border: none;
+            padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer;
+        }
+        .btn-aceptar {
+            background: #013857; color: #ffffff; border: none;
+            padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-aceptar:disabled, .btn-cancelar:disabled { opacity: 0.6; cursor: default; }
+        .modal-msg { font-size: 11.5px; font-weight: bold; margin-top: 6px; min-height: 14px; color: #c62828; }
         
         .interactive-panel { 
             flex-grow: 1; 
@@ -272,6 +344,9 @@
         <div class="calendar-grid" id="mainCalendar"></div>
 
         <div class="sync-button-container" id="syncBtnContainer">
+            <button class="btn-sync" id="registroBtn" onclick="abrirRegistro()">
+                <i class="fa-solid fa-pen-to-square"></i> Registro
+            </button>
             <button class="btn-sync" id="syncBtn" onclick="manualSync()">
                 <i class="fa-solid fa-sync" id="syncIcon"></i> Actualizar
             </button>
@@ -288,6 +363,64 @@
             </div>
             <div id="detailsSection" style="display:none;">
                 <div id="cardsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Ventana 1: contraseña (se pide cada vez que se pulsa Registro) ===== -->
+    <div class="modal-overlay" id="passModal">
+        <div class="modal-box">
+            <div class="modal-title"><i class="fa-solid fa-lock"></i> Acceso restringido</div>
+            <div class="modal-body">
+                <div class="form-field">
+                    <label for="passInput">Contraseña</label>
+                    <input type="password" id="passInput" autocomplete="off" onkeydown="if(event.key==='Enter') verificarClave()">
+                </div>
+                <div class="modal-msg" id="passMsg"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancelar" id="passCancelBtn" onclick="cerrarModales()">Cancelar</button>
+                <button class="btn-aceptar" id="passOkBtn" onclick="verificarClave()">Entrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Ventana 2: formulario de registro ===== -->
+    <div class="modal-overlay" id="regModal">
+        <div class="modal-box">
+            <div class="modal-title"><i class="fa-solid fa-pen-to-square"></i> Registrar cirugía</div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-field"><label for="rFecha">Fecha</label><input type="date" id="rFecha"></div>
+                    <div class="form-field"><label for="rHora">Hora</label><input type="time" id="rHora"></div>
+                </div>
+                <div class="form-field">
+                    <label for="rEstado">Estado</label>
+                    <select id="rEstado">
+                        <option value="">Seleccione...</option>
+                        <option value="Esterilizado en VG">Esterilizado en VG</option>
+                        <option value="Esterilizado en Clínica">Esterilizado en Clínica</option>
+                        <option value="No Aplica Esterilización">No Aplica Esterilización</option>
+                    </select>
+                </div>
+                <div class="form-field"><label for="rClinica">Clínica</label><input type="text" id="rClinica"></div>
+                <div class="form-field"><label for="rMedico">Doctor (a)</label><input type="text" id="rMedico"></div>
+                <div class="form-field"><label for="rPaciente">Paciente</label><input type="text" id="rPaciente"></div>
+                <div class="form-row">
+                    <div class="form-field"><label for="rCi">C.I.</label><input type="text" id="rCi" inputmode="numeric"></div>
+                    <div class="form-field"><label for="rEdad">Edad</label><input type="number" id="rEdad" min="0" max="120" inputmode="numeric"></div>
+                </div>
+                <div class="form-field"><label for="rSistemas">Sistemas (separados por coma)</label><input type="text" id="rSistemas"></div>
+                <div class="form-row">
+                    <div class="form-field"><label for="rInst">Instrumentista</label><input type="text" id="rInst"></div>
+                    <div class="form-field"><label for="rTransp">Transportista</label><input type="text" id="rTransp"></div>
+                </div>
+                <div class="form-field"><label for="rRdv">RDVY</label><input type="text" id="rRdv"></div>
+                <div class="modal-msg" id="regMsg"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancelar" id="regCancelBtn" onclick="cerrarModales()">Cancelar</button>
+                <button class="btn-aceptar" id="regOkBtn" onclick="guardarRegistro()"><i class="fa-solid fa-check"></i> Aceptar</button>
             </div>
         </div>
     </div>
@@ -476,11 +609,137 @@ listContainer.innerHTML += `
             document.getElementById('fixedDetailsHeader').style.display = 'flex';
         }
 
+        // ===================== REGISTRO DE CIRUGÍAS =====================
+        // La contraseña se guarda SOLO en esta variable, mientras el formulario está abierto.
+        // Al cerrar o guardar se borra, así que se pide de nuevo cada vez que se pulsa "Registro".
+        let claveTemporal = "";
+
+        async function enviarAlServidor(payload) {
+            // text/plain evita el "preflight" CORS con Apps Script
+            const resp = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
+            return await resp.json();
+        }
+
+        function abrirRegistro() {
+            claveTemporal = "";
+            document.getElementById('passInput').value = "";
+            document.getElementById('passMsg').innerText = "";
+            document.getElementById('passModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('passInput').focus(), 100);
+        }
+
+        function cerrarModales() {
+            claveTemporal = "";
+            document.getElementById('passInput').value = "";
+            document.getElementById('passModal').style.display = 'none';
+            document.getElementById('regModal').style.display = 'none';
+        }
+
+        async function verificarClave() {
+            const clave = document.getElementById('passInput').value;
+            const msg = document.getElementById('passMsg');
+            const btn = document.getElementById('passOkBtn');
+            if (!clave) { msg.innerText = "Ingrese la contraseña."; return; }
+
+            btn.disabled = true;
+            msg.style.color = '#64748b';
+            msg.innerText = "Verificando...";
+            try {
+                const r = await enviarAlServidor({ action: 'verificar', clave: clave });
+                if (r.ok) {
+                    claveTemporal = clave;
+                    document.getElementById('passInput').value = "";
+                    document.getElementById('passModal').style.display = 'none';
+                    prepararFormulario();
+                } else {
+                    msg.style.color = '#c62828';
+                    msg.innerText = r.claveIncorrecta ? "Contraseña incorrecta." : (r.error || "No se pudo verificar.");
+                }
+            } catch (err) {
+                msg.style.color = '#c62828';
+                msg.innerText = "Error de conexión. Intente de nuevo.";
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function prepararFormulario() {
+            ['rHora','rEstado','rClinica','rMedico','rPaciente','rCi','rEdad','rSistemas','rInst','rTransp','rRdv']
+                .forEach(id => document.getElementById(id).value = "");
+            const hoyLocal = new Date();
+            const y = hoyLocal.getFullYear();
+            const m = String(hoyLocal.getMonth() + 1).padStart(2, '0');
+            const d = String(hoyLocal.getDate()).padStart(2, '0');
+            document.getElementById('rFecha').value = `${y}-${m}-${d}`;
+            document.getElementById('regMsg').innerText = "";
+            document.getElementById('regModal').style.display = 'flex';
+        }
+
+        // Convierte "14:30" (selector) a "2:30 PM", el formato que ya usa tu hoja
+        function horaA12(hhmm) {
+            if (!hhmm) return "";
+            let [h, mi] = hhmm.split(':').map(Number);
+            const suf = h >= 12 ? 'PM' : 'AM';
+            h = h % 12; if (h === 0) h = 12;
+            return `${h}:${String(mi).padStart(2, '0')} ${suf}`;
+        }
+
+        async function guardarRegistro() {
+            const msg = document.getElementById('regMsg');
+            const btn = document.getElementById('regOkBtn');
+            const fecha = document.getElementById('rFecha').value;
+
+            if (!fecha) { msg.style.color = '#c62828'; msg.innerText = "La fecha es obligatoria."; return; }
+
+            const payload = {
+                action: 'registrar',
+                clave: claveTemporal,
+                fecha: fecha,
+                hora: horaA12(document.getElementById('rHora').value),
+                estado: document.getElementById('rEstado').value,
+                clinica: document.getElementById('rClinica').value,
+                medico: document.getElementById('rMedico').value,
+                paciente: document.getElementById('rPaciente').value,
+                ci: document.getElementById('rCi').value,
+                edad: document.getElementById('rEdad').value,
+                sistemas: document.getElementById('rSistemas').value,
+                instrumentista: document.getElementById('rInst').value,
+                transportista: document.getElementById('rTransp').value,
+                rdv: document.getElementById('rRdv').value
+            };
+
+            btn.disabled = true;
+            document.getElementById('regCancelBtn').disabled = true;
+            msg.style.color = '#64748b';
+            msg.innerText = "Guardando...";
+            try {
+                const r = await enviarAlServidor(payload);
+                if (r.ok) {
+                    cerrarModales();
+                    alert("Cirugía registrada en la pestaña de " + r.hoja + ".");
+                    await renderCalendar();
+                } else {
+                    msg.style.color = '#c62828';
+                    msg.innerText = r.claveIncorrecta ? "Contraseña incorrecta." : (r.error || "No se pudo guardar.");
+                }
+            } catch (err) {
+                msg.style.color = '#c62828';
+                msg.innerText = "Error de conexión. No se guardó nada.";
+            } finally {
+                btn.disabled = false;
+                document.getElementById('regCancelBtn').disabled = false;
+            }
+        }
+
         function closePanel() {
             document.getElementById('legendSection').style.display = 'block';
             document.getElementById('detailsSection').style.display = 'none';
             
-            document.getElementById('syncBtnContainer').style.display = 'block';
+            document.getElementById('syncBtnContainer').style.display = 'flex';
             document.getElementById('fixedDetailsHeader').style.display = 'none';
         }
     </script>
@@ -498,7 +757,7 @@ listContainer.innerHTML += `
         });
 
         let lastCheck = localStorage.getItem('last_webapp_version');
-        let currentVersion = "2026.09.02.1";
+        let currentVersion = "2026.10.07.1";
 
         if (lastCheck && lastCheck !== currentVersion) {
             localStorage.setItem('last_webapp_version', currentVersion);
