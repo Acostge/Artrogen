@@ -213,6 +213,14 @@
         }
         .btn-aceptar:disabled, .btn-cancelar:disabled { opacity: 0.6; cursor: default; }
         .modal-msg { font-size: 11.5px; font-weight: bold; margin-top: 6px; min-height: 14px; color: #c62828; }
+
+        /* Corrección de scroll: el panel de cirugías ahora llega hasta la última tarjeta completa */
+        .interactive-panel { min-height: 0; padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+        .tag-group { margin-bottom: 2px; }
+
+        /* Hora compacta: 3 listas pequeñas en lugar del reloj grande del sistema */
+        .hora-row { display: flex; gap: 6px; }
+        .hora-row select { flex: 1; min-width: 0; padding: 8px 6px; }
         
         .interactive-panel { 
             flex-grow: 1; 
@@ -390,9 +398,18 @@
         <div class="modal-box">
             <div class="modal-title"><i class="fa-solid fa-pen-to-square"></i> Registrar cirugía</div>
             <div class="modal-body">
-                <div class="form-row">
-                    <div class="form-field"><label for="rFecha">Fecha</label><input type="date" id="rFecha"></div>
-                    <div class="form-field"><label for="rHora">Hora</label><input type="time" id="rHora"></div>
+                <div class="form-field"><label for="rFecha">Fecha</label><input type="date" id="rFecha"></div>
+                <div class="form-field">
+                    <label for="rHH">Hora</label>
+                    <div class="hora-row">
+                        <select id="rHH"><option value="">Hora</option></select>
+                        <select id="rMM"><option value="">Min</option></select>
+                        <select id="rAP">
+                            <option value="">--</option>
+                            <option value="AM">AM</option>
+                            <option value="PM">PM</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-field">
                     <label for="rEstado">Estado</label>
@@ -415,7 +432,7 @@
                     <div class="form-field"><label for="rInst">Instrumentista</label><input type="text" id="rInst"></div>
                     <div class="form-field"><label for="rTransp">Transportista</label><input type="text" id="rTransp"></div>
                 </div>
-                <div class="form-field"><label for="rRdv">RDVY</label><input type="text" id="rRdv"></div>
+                <div class="form-field"><label for="rRdv">RDV</label><input type="text" id="rRdv"></div>
                 <div class="modal-msg" id="regMsg"></div>
             </div>
             <div class="modal-actions">
@@ -668,7 +685,14 @@ listContainer.innerHTML += `
         }
 
         function prepararFormulario() {
-            ['rHora','rEstado','rClinica','rMedico','rPaciente','rCi','rEdad','rSistemas','rInst','rTransp','rRdv']
+            // Llenamos las listas de hora/minutos una sola vez
+            const selHH = document.getElementById('rHH');
+            if (selHH.options.length === 1) {
+                for (let h = 1; h <= 12; h++) selHH.add(new Option(h, h));
+                const selMM = document.getElementById('rMM');
+                for (let m = 0; m < 60; m += 5) selMM.add(new Option(String(m).padStart(2, '0'), String(m).padStart(2, '0')));
+            }
+            ['rHH','rMM','rAP','rEstado','rClinica','rMedico','rPaciente','rCi','rEdad','rSistemas','rInst','rTransp','rRdv']
                 .forEach(id => document.getElementById(id).value = "");
             const hoyLocal = new Date();
             const y = hoyLocal.getFullYear();
@@ -679,13 +703,14 @@ listContainer.innerHTML += `
             document.getElementById('regModal').style.display = 'flex';
         }
 
-        // Convierte "14:30" (selector) a "2:30 PM", el formato que ya usa tu hoja
-        function horaA12(hhmm) {
-            if (!hhmm) return "";
-            let [h, mi] = hhmm.split(':').map(Number);
-            const suf = h >= 12 ? 'PM' : 'AM';
-            h = h % 12; if (h === 0) h = 12;
-            return `${h}:${String(mi).padStart(2, '0')} ${suf}`;
+        // Arma la hora como "2:30 PM", el formato que ya usa tu hoja. Devuelve null si está incompleta.
+        function leerHora() {
+            const h = document.getElementById('rHH').value;
+            const m = document.getElementById('rMM').value;
+            const ap = document.getElementById('rAP').value;
+            if (!h && !m && !ap) return "";          // sin hora
+            if (!h || !ap) return null;               // incompleta
+            return `${h}:${m || '00'} ${ap}`;
         }
 
         async function guardarRegistro() {
@@ -694,12 +719,14 @@ listContainer.innerHTML += `
             const fecha = document.getElementById('rFecha').value;
 
             if (!fecha) { msg.style.color = '#c62828'; msg.innerText = "La fecha es obligatoria."; return; }
+            const horaTexto = leerHora();
+            if (horaTexto === null) { msg.style.color = '#c62828'; msg.innerText = "Complete la hora (hora y AM/PM) o déjela vacía."; return; }
 
             const payload = {
                 action: 'registrar',
                 clave: claveTemporal,
                 fecha: fecha,
-                hora: horaA12(document.getElementById('rHora').value),
+                hora: horaTexto,
                 estado: document.getElementById('rEstado').value,
                 clinica: document.getElementById('rClinica').value,
                 medico: document.getElementById('rMedico').value,
@@ -757,7 +784,7 @@ listContainer.innerHTML += `
         });
 
         let lastCheck = localStorage.getItem('last_webapp_version');
-        let currentVersion = "2026.10.07.1";
+        let currentVersion = "2026.10.07.2";
 
         if (lastCheck && lastCheck !== currentVersion) {
             localStorage.setItem('last_webapp_version', currentVersion);
