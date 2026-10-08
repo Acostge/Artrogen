@@ -451,8 +451,8 @@
                 <div class="form-field"><label for="rMedico">Doctor (a)</label><input type="text" id="rMedico"></div>
                 <div class="form-field"><label for="rPaciente">Paciente</label><input type="text" id="rPaciente"></div>
                 <div class="form-row">
-                    <div class="form-field"><label for="rCi">C.I.</label><input type="text" id="rCi" inputmode="numeric"></div>
-                    <div class="form-field"><label for="rEdad">Edad</label><input type="number" id="rEdad" min="0" max="120" inputmode="numeric"></div>
+                    <div class="form-field"><label for="rCi">C.I.</label><input type="text" id="rCi" maxlength="30" autocomplete="off" placeholder="V-21.132.755"></div>
+                    <div class="form-field"><label for="rEdad">Edad</label><input type="text" id="rEdad" maxlength="30" autocomplete="off" placeholder="54 Años"></div>
                 </div>
                 <div class="form-field"><label for="rSistemas">Sistemas (separados por coma)</label><input type="text" id="rSistemas"></div>
                 <div class="form-row">
@@ -1001,7 +1001,7 @@ listContainer.innerHTML += `
         });
 
         let lastCheck = localStorage.getItem('last_webapp_version');
-        let currentVersion = "2026.10.07.3";
+        let currentVersion = "2026.10.08.1";
 
         if (lastCheck && lastCheck !== currentVersion) {
             localStorage.setItem('last_webapp_version', currentVersion);
