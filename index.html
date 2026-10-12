@@ -479,6 +479,7 @@
                     <input type="date" id="aFecha" onchange="cargarPendientes()">
                 </div>
                 <div class="apr-lista" id="aLista"></div>
+                <datalist id="aprOpciones"></datalist>
                 <div class="modal-msg" id="aMsg"></div>
             </div>
             <div class="modal-actions">
@@ -881,6 +882,7 @@ listContainer.innerHTML += `
                     return;
                 }
                 pendientesApr = r.lista || [];
+                cargarOpcionesAprobacion(r.opciones || []);
                 dibujarPendientes(fecha);
             } catch (err) {
                 if (miPeticion !== peticionApr) return;
@@ -888,6 +890,19 @@ listContainer.innerHTML += `
                 msg.style.color = '#c62828';
                 msg.innerText = "Error de conexión. Intente de nuevo.";
             }
+        }
+
+        // Lista desplegable con las aprobaciones ya usadas (únicas, sin vacías). Igual se puede escribir una nueva.
+        function cargarOpcionesAprobacion(opciones) {
+            const dl = document.getElementById('aprOpciones');
+            dl.innerHTML = '';
+            opciones.forEach(v => {
+                const t = String(v == null ? '' : v).trim();
+                if (!t) return;
+                const o = document.createElement('option');
+                o.value = t;
+                dl.appendChild(o);
+            });
         }
 
         function dibujarPendientes(fecha) {
@@ -927,7 +942,7 @@ listContainer.innerHTML += `
                     <div class="card-field"><strong>👤 Paciente:</strong> ${esc(pacienteTexto)}</div>
                     <div class="card-field"><strong>🚑 Inst. / Transp:</strong> ${esc(equipo)}</div>
                     <div class="card-field"><strong>📱 RDV:</strong> ${esc(c.rdv || 'No asignado')}</div>
-                    <div class="card-field"><strong>🔑 Aprobación:</strong> <input type="text" class="apr-input" id="aprInput_${i}" maxlength="300" autocomplete="off"></div>
+                    <div class="card-field"><strong>🔑 Aprobación:</strong> <input type="text" class="apr-input" id="aprInput_${i}" list="aprOpciones" maxlength="300" autocomplete="off"></div>
                     ${tags ? `<div class="tag-group">${tags}</div>` : ''}
                 </div>`;
             }).join('');
@@ -1003,7 +1018,7 @@ listContainer.innerHTML += `
         });
 
         let lastCheck = localStorage.getItem('last_webapp_version');
-        let currentVersion = "2026.10.08.2";
+        let currentVersion = "2026.10.12.1";
 
         if (lastCheck && lastCheck !== currentVersion) {
             localStorage.setItem('last_webapp_version', currentVersion);
