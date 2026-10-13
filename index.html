@@ -420,7 +420,7 @@
                     <input type="password" id="passInput" autocomplete="off" onkeydown="if(event.key==='Enter') verificarClave()">
                 </div>
                 <label class="chk-row"><input type="checkbox" id="chkRecordar"> <span>Recordar este equipo por 7 días</span></label>
-                <label class="chk-row" id="bioRow" style="display:none;"><input type="checkbox" id="chkBio" onchange="if(this.checked) document.getElementById('chkRecordar').checked = true;"> <span>Usar huella o rostro para entrar (en vez de escribir la clave)</span></label>
+                <label class="chk-row" id="bioRow" style="display:none;"><input type="checkbox" id="chkBio" onchange="if(this.checked) document.getElementById('chkRecordar').checked = true;"> <span>Usar huella o rostro: se confirma 1 vez cada 7 días y la clave se pide cada 30</span></label>
                 <button type="button" class="link-olvidar" id="btnOlvidar" style="display:none;" onclick="olvidarEquipo()">Olvidar este equipo</button>
                 <div class="modal-msg" id="passMsg"></div>
             </div>
@@ -693,6 +693,8 @@ listContainer.innerHTML += `
         const LS_SESIONES = 'cartelera_sesiones_v1';   // { registro:{token,exp}, aprobacion:{token,exp} } -> equipo recordado
         const LS_BIO = 'cartelera_bio_v1';             // id de la huella/rostro registrada en ESTE equipo
         const LS_PREF = 'cartelera_pref_v1';           // última elección de las casillas
+        const LS_BIOOK = 'cartelera_biook_v1';         // hasta cuándo NO hace falta volver a pedir la huella/rostro
+        const DIAS_REFRESCO_BIO = 7;                   // cada cuántos días se "refresca" el ingreso con huella/rostro
 
         function lsLeer(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
         function lsGuardar(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
@@ -796,8 +798,15 @@ listContainer.innerHTML += `
             credencial = {};
             const sesion = sesionLocal(modoClave);
             if (sesion && lsLeer(LS_BIO)) {
+                // Dentro de los 7 días desde la última confirmación: entra directo, sin pedir nada
+                if (Date.now() < (lsLeer(LS_BIOOK) || 0)) { await entrarConToken(sesion.token); return; }
+                // Pasados los 7 días: se refresca el ingreso con la huella/rostro
                 const ok = await pedirBiometria();
-                if (ok) { await entrarConToken(sesion.token); return; }
+                if (ok) {
+                    lsGuardar(LS_BIOOK, Date.now() + DIAS_REFRESCO_BIO * 24 * 60 * 60 * 1000);
+                    await entrarConToken(sesion.token);
+                    return;
+                }
                 // cancelada o fallida: se pide la contraseña
             } else if (sesion) {
                 await entrarConToken(sesion.token);
@@ -893,11 +902,14 @@ listContainer.innerHTML += `
             msg.innerText = "Verificando...";
             try {
                 const accion = (modoClave === 'aprobacion') ? 'verificarAprobacion' : 'verificar';
-                const r = await enviarAlServidor({ action: accion, clave: clave, recordar: recordar });
+                const usaBio = !!(bioIdNueva || lsLeer(LS_BIO));
+                const r = await enviarAlServidor({ action: accion, clave: clave, recordar: recordar, bio: usaBio });
                 if (r.ok) {
                     lsGuardar(LS_PREF, { recordar: recordar, bio: quiereBio });
                     if (r.token) guardarSesionLocal(r.rol || modoClave, r.token, r.expira);
                     if (bioIdNueva && r.token) lsGuardar(LS_BIO, bioIdNueva);
+                    // Entró con la contraseña: el ingreso queda fresco 7 días más
+                    if (r.token && lsLeer(LS_BIO)) lsGuardar(LS_BIOOK, Date.now() + DIAS_REFRESCO_BIO * 24 * 60 * 60 * 1000);
                     credencial = r.token ? { token: r.token } : { clave: clave };
                     abrirDestino();
                 } else {
@@ -917,6 +929,7 @@ listContainer.innerHTML += `
             const tokens = Object.values(lsLeer(LS_SESIONES) || {}).map(x => x && x.token).filter(Boolean);
             lsBorrar(LS_SESIONES);
             lsBorrar(LS_BIO);
+            lsBorrar(LS_BIOOK);
             lsBorrar(LS_PREF);
             document.getElementById('chkRecordar').checked = false;
             actualizarCasillasAcceso({});
@@ -1186,7 +1199,7 @@ listContainer.innerHTML += `
         });
 
         let lastCheck = localStorage.getItem('last_webapp_version');
-        let currentVersion = "2026.10.13.1";
+        let currentVersion = "2026.10.13.2";
 
         if (lastCheck && lastCheck !== currentVersion) {
             localStorage.setItem('last_webapp_version', currentVersion);
