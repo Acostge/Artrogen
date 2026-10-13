@@ -245,6 +245,14 @@
         }
         .apr-input:focus { border-color: #83CCEB; }
         .apr-lista .card-field { align-items: center; }
+
+        /* Nombre del paciente resaltado en las tarjetas */
+        .pac-nombre { font-weight: 700; color: #0f172a; }
+
+        /* Casillas de la ventana de contraseña */
+        .chk-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; font-size: 11.5px; color: #475569; line-height: 1.3; cursor: pointer; }
+        .chk-row input { width: auto; margin-top: 2px; flex-shrink: 0; accent-color: #013857; }
+        .link-olvidar { background: none; border: none; color: #64748b; font-size: 11px; text-decoration: underline; cursor: pointer; padding: 0; margin-top: 10px; }
         
         .interactive-panel { 
             flex-grow: 1; 
@@ -411,6 +419,9 @@
                     <label for="passInput">Contraseña</label>
                     <input type="password" id="passInput" autocomplete="off" onkeydown="if(event.key==='Enter') verificarClave()">
                 </div>
+                <label class="chk-row"><input type="checkbox" id="chkRecordar"> <span>Recordar este equipo por 7 días</span></label>
+                <label class="chk-row" id="bioRow" style="display:none;"><input type="checkbox" id="chkBio" onchange="if(this.checked) document.getElementById('chkRecordar').checked = true;"> <span>Usar huella o rostro para entrar (en vez de escribir la clave)</span></label>
+                <button type="button" class="link-olvidar" id="btnOlvidar" style="display:none;" onclick="olvidarEquipo()">Olvidar este equipo</button>
                 <div class="modal-msg" id="passMsg"></div>
             </div>
             <div class="modal-actions">
@@ -636,10 +647,10 @@
                     bordeIzquierdoColor = '#71717a';
                 }
 
-                // Paciente + Cédula de Identidad integrada
-                let pacienteTexto = c.paciente || 'Por asignar';
+                // Paciente (nombre en negrita) + Cédula de Identidad integrada
+                let pacienteTexto = `<b class="pac-nombre">${esc(c.paciente || 'Por asignar')}</b>`;
                 if (c.ci && c.ci.trim() !== "") {
-                    pacienteTexto += `, C.I. ${c.ci.trim()}`;
+                    pacienteTexto += `, C.I. ${esc(c.ci.trim())}`;
                 }
 
                 // Separación por Slash " / " para el Equipo
@@ -675,11 +686,83 @@ listContainer.innerHTML += `
             document.getElementById('fixedDetailsHeader').style.display = 'flex';
         }
 
-        // ===================== REGISTRO DE CIRUGÍAS =====================
-        // La contraseña se guarda SOLO en esta variable, mientras el formulario está abierto.
-        // Al cerrar o guardar se borra, así que se pide de nuevo cada vez que se pulsa "Registro".
-        let claveTemporal = "";
+        // ===================== ACCESO (clave, equipo recordado y huella/rostro) =====================
+        // "credencial" es lo que se envía al servidor en cada petición: {clave} o {token}. Solo vive en memoria con la ventana abierta.
+        let credencial = {};
 
+        const LS_SESIONES = 'cartelera_sesiones_v1';   // { registro:{token,exp}, aprobacion:{token,exp} } -> equipo recordado
+        const LS_BIO = 'cartelera_bio_v1';             // id de la huella/rostro registrada en ESTE equipo
+        const LS_PREF = 'cartelera_pref_v1';           // última elección de las casillas
+
+        function lsLeer(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+        function lsGuardar(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+        function lsBorrar(k) { try { localStorage.removeItem(k); } catch (e) {} }
+
+        // Sesión recordada vigente para este botón (la clave de Registro también sirve para Aprobación)
+        function sesionLocal(modo) {
+            const s = lsLeer(LS_SESIONES) || {};
+            const ahora = Date.now();
+            const orden = (modo === 'aprobacion') ? ['aprobacion', 'registro'] : ['registro'];
+            for (const rol of orden) {
+                if (s[rol] && s[rol].token && s[rol].exp > ahora) return s[rol];
+            }
+            return null;
+        }
+
+        function guardarSesionLocal(rol, token, exp) {
+            const s = lsLeer(LS_SESIONES) || {};
+            s[rol] = { token: token, exp: exp };
+            lsGuardar(LS_SESIONES, s);
+        }
+
+        function borrarSesionLocal(token) {
+            const s = lsLeer(LS_SESIONES) || {};
+            Object.keys(s).forEach(rol => { if (!token || (s[rol] && s[rol].token === token)) delete s[rol]; });
+            lsGuardar(LS_SESIONES, s);
+        }
+
+        // ---- Huella / rostro del celular (WebAuthn). Solo desbloquea el acceso guardado en ESTE equipo. ----
+        function bufATexto(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+        function textoABytes(txt) { return Uint8Array.from(atob(txt), c => c.charCodeAt(0)); }
+
+        let biometriaDisp = false;
+        (async function () {
+            try {
+                biometriaDisp = !!(window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable
+                    && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable());
+            } catch (e) { biometriaDisp = false; }
+        })();
+
+        async function registrarBiometria() {
+            try {
+                const cred = await navigator.credentials.create({ publicKey: {
+                    challenge: crypto.getRandomValues(new Uint8Array(32)),
+                    rp: { name: 'Cartelera Qx' },
+                    user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'equipo', displayName: 'Este equipo' },
+                    pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+                    authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'discouraged' },
+                    timeout: 60000,
+                    attestation: 'none'
+                }});
+                return cred ? bufATexto(cred.rawId) : null;
+            } catch (e) { return null; }
+        }
+
+        async function pedirBiometria() {
+            const id = lsLeer(LS_BIO);
+            if (!id) return false;
+            try {
+                const r = await navigator.credentials.get({ publicKey: {
+                    challenge: crypto.getRandomValues(new Uint8Array(32)),
+                    allowCredentials: [{ type: 'public-key', id: textoABytes(id), transports: ['internal'] }],
+                    userVerification: 'required',
+                    timeout: 60000
+                }});
+                return !!r;
+            } catch (e) { return false; }
+        }
+
+        // ---- Comunicación con el servidor ----
         async function enviarAlServidor(payload) {
             // text/plain evita el "preflight" CORS con Apps Script
             const resp = await fetch(WEB_APP_URL, {
@@ -690,30 +773,89 @@ listContainer.innerHTML += `
             return await resp.json();
         }
 
-        // 'registro' o 'aprobacion': define qué contraseña se valida y qué ventana se abre después
+        // Texto del error cuando el servidor rechaza una petición
+        function textoErrorServidor(r, porDefecto) {
+            if (r.claveIncorrecta) {
+                if (credencial.token) {
+                    borrarSesionLocal(credencial.token);
+                    return "El acceso de este equipo venció. Cierre la ventana y entre de nuevo con la contraseña.";
+                }
+                return "Contraseña incorrecta.";
+            }
+            return r.error || porDefecto;
+        }
+
+        // 'registro' o 'aprobacion': define qué acceso se pide y qué ventana se abre después
         let modoClave = 'registro';
 
-        function abrirAprobacion() {
-            modoClave = 'aprobacion';
-            abrirVentanaClave();
+        function abrirAprobacion() { modoClave = 'aprobacion'; iniciarAcceso(); }
+        function abrirRegistro()  { modoClave = 'registro';  iniciarAcceso(); }
+
+        // OJO: antes de pedirBiometria() no debe haber ningún "await": el celular solo la permite justo después de un toque.
+        async function iniciarAcceso() {
+            credencial = {};
+            const sesion = sesionLocal(modoClave);
+            if (sesion && lsLeer(LS_BIO)) {
+                const ok = await pedirBiometria();
+                if (ok) { await entrarConToken(sesion.token); return; }
+                // cancelada o fallida: se pide la contraseña
+            } else if (sesion) {
+                await entrarConToken(sesion.token);
+                return;
+            }
+            mostrarVentanaClave();
         }
 
-        function abrirRegistro() {
-            modoClave = 'registro';
-            abrirVentanaClave();
+        async function entrarConToken(token) {
+            mostrarVentanaClave('Verificando equipo...', true);
+            try {
+                const accion = (modoClave === 'aprobacion') ? 'verificarAprobacion' : 'verificar';
+                const r = await enviarAlServidor({ action: accion, token: token });
+                if (r.ok) {
+                    credencial = { token: token };
+                    abrirDestino();
+                    return;
+                }
+                borrarSesionLocal(token);
+                mostrarVentanaClave('El acceso de este equipo venció. Ingrese la contraseña.');
+            } catch (err) {
+                mostrarVentanaClave('Error de conexión. Intente de nuevo.');
+            }
         }
 
-        function abrirVentanaClave() {
-            claveTemporal = "";
-            document.getElementById('passInput').value = "";
-            document.getElementById('passMsg').innerText = "";
+        function actualizarCasillasAcceso(pref) {
+            const yaBio = !!lsLeer(LS_BIO);
+            document.getElementById('bioRow').style.display = (biometriaDisp && !yaBio) ? 'flex' : 'none';
+            document.getElementById('chkBio').checked = !!(pref && pref.bio) && biometriaDisp && !yaBio;
+            const haySesion = Object.keys(lsLeer(LS_SESIONES) || {}).length > 0;
+            document.getElementById('btnOlvidar').style.display = (yaBio || haySesion) ? 'inline-block' : 'none';
+        }
+
+        function mostrarVentanaClave(mensaje, esperando) {
+            const inp = document.getElementById('passInput');
+            const msg = document.getElementById('passMsg');
+            const pref = lsLeer(LS_PREF) || {};
+            inp.value = '';
+            inp.disabled = !!esperando;
+            document.getElementById('passOkBtn').disabled = !!esperando;
+            msg.style.color = esperando ? '#64748b' : '#c62828';
+            msg.innerText = mensaje || '';
+            document.getElementById('chkRecordar').checked = !!pref.recordar;
+            actualizarCasillasAcceso(pref);
             document.getElementById('passModal').style.display = 'flex';
-            setTimeout(() => document.getElementById('passInput').focus(), 100);
+            if (!esperando) setTimeout(() => inp.focus(), 100);
+        }
+
+        function abrirDestino() {
+            document.getElementById('passInput').value = '';
+            document.getElementById('passModal').style.display = 'none';
+            if (modoClave === 'aprobacion') prepararAprobacion();
+            else prepararFormulario();
         }
 
         function cerrarModales() {
-            claveTemporal = "";
-            document.getElementById('passInput').value = "";
+            credencial = {};
+            document.getElementById('passInput').value = '';
             document.getElementById('passModal').style.display = 'none';
             document.getElementById('regModal').style.display = 'none';
             document.getElementById('aprModal').style.display = 'none';
@@ -732,20 +874,32 @@ listContainer.innerHTML += `
             const clave = document.getElementById('passInput').value;
             const msg = document.getElementById('passMsg');
             const btn = document.getElementById('passOkBtn');
-            if (!clave) { msg.innerText = "Ingrese la contraseña."; return; }
+            if (!clave) { msg.style.color = '#c62828'; msg.innerText = "Ingrese la contraseña."; return; }
+
+            const quiereBio = biometriaDisp && !lsLeer(LS_BIO) && document.getElementById('chkBio').checked;
+            const recordar = document.getElementById('chkRecordar').checked || quiereBio;
 
             btn.disabled = true;
+
+            // El permiso de huella/rostro se pide ahora mismo (justo tras el toque), antes de esperar al servidor.
+            let bioIdNueva = null;
+            if (quiereBio) {
+                msg.style.color = '#64748b';
+                msg.innerText = "Confirme con su huella o rostro cuando el celular se lo pida...";
+                bioIdNueva = await registrarBiometria();
+            }
+
             msg.style.color = '#64748b';
             msg.innerText = "Verificando...";
             try {
                 const accion = (modoClave === 'aprobacion') ? 'verificarAprobacion' : 'verificar';
-                const r = await enviarAlServidor({ action: accion, clave: clave });
+                const r = await enviarAlServidor({ action: accion, clave: clave, recordar: recordar });
                 if (r.ok) {
-                    claveTemporal = clave;
-                    document.getElementById('passInput').value = "";
-                    document.getElementById('passModal').style.display = 'none';
-                    if (modoClave === 'aprobacion') prepararAprobacion();
-                    else prepararFormulario();
+                    lsGuardar(LS_PREF, { recordar: recordar, bio: quiereBio });
+                    if (r.token) guardarSesionLocal(r.rol || modoClave, r.token, r.expira);
+                    if (bioIdNueva && r.token) lsGuardar(LS_BIO, bioIdNueva);
+                    credencial = r.token ? { token: r.token } : { clave: clave };
+                    abrirDestino();
                 } else {
                     msg.style.color = '#c62828';
                     msg.innerText = r.claveIncorrecta ? "Contraseña incorrecta." : (r.error || "No se pudo verificar.");
@@ -756,6 +910,20 @@ listContainer.innerHTML += `
             } finally {
                 btn.disabled = false;
             }
+        }
+
+        // Quita este equipo de la lista de equipos recordados (y la huella/rostro guardada)
+        async function olvidarEquipo() {
+            const tokens = Object.values(lsLeer(LS_SESIONES) || {}).map(x => x && x.token).filter(Boolean);
+            lsBorrar(LS_SESIONES);
+            lsBorrar(LS_BIO);
+            lsBorrar(LS_PREF);
+            document.getElementById('chkRecordar').checked = false;
+            actualizarCasillasAcceso({});
+            const msg = document.getElementById('passMsg');
+            msg.style.color = '#2e7d32';
+            msg.innerText = "Este equipo fue olvidado. Se pedirá la contraseña.";
+            tokens.forEach(t => { enviarAlServidor({ action: 'olvidarEquipo', token: t }).catch(() => {}); });
         }
 
         function prepararFormulario() {
@@ -798,7 +966,7 @@ listContainer.innerHTML += `
 
             const payload = {
                 action: 'registrar',
-                clave: claveTemporal,
+                ...credencial,
                 fecha: fecha,
                 hora: horaTexto,
                 estado: document.getElementById('rEstado').value,
@@ -825,7 +993,7 @@ listContainer.innerHTML += `
                     await renderCalendar();
                 } else {
                     msg.style.color = '#c62828';
-                    msg.innerText = r.claveIncorrecta ? "Contraseña incorrecta." : (r.error || "No se pudo guardar.");
+                    msg.innerText = textoErrorServidor(r, "No se pudo guardar.");
                 }
             } catch (err) {
                 msg.style.color = '#c62828';
@@ -873,12 +1041,12 @@ listContainer.innerHTML += `
 
             lista.innerHTML = '<div class="apr-vacio"><i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Buscando cirugías sin aprobación...</div>';
             try {
-                const r = await enviarAlServidor({ action: 'pendientesAprobacion', clave: claveTemporal, fecha: fecha });
+                const r = await enviarAlServidor({ action: 'pendientesAprobacion', ...credencial, fecha: fecha });
                 if (miPeticion !== peticionApr) return;   // se eligió otra fecha o se cerró la ventana
                 if (!r.ok) {
                     lista.innerHTML = '';
                     msg.style.color = '#c62828';
-                    msg.innerText = r.claveIncorrecta ? "Contraseña incorrecta." : (r.error || "No se pudo consultar.");
+                    msg.innerText = textoErrorServidor(r, "No se pudo consultar.");
                     return;
                 }
                 pendientesApr = r.lista || [];
@@ -925,8 +1093,8 @@ listContainer.innerHTML += `
                 if (horaUp === 'SUSPENDIDA') { clase += ' card-suspended'; horaClase = 'text-suspended'; borde = '#c62828'; }
                 else if (horaUp === 'DEVUELTO') { clase += ' card-returned'; horaClase = 'text-returned'; borde = '#71717a'; }
 
-                let pacienteTexto = c.paciente || 'Por asignar';
-                if (c.ci && String(c.ci).trim() !== '') pacienteTexto += `, C.I. ${String(c.ci).trim()}`;
+                let pacienteTexto = `<b class="pac-nombre">${esc(c.paciente || 'Por asignar')}</b>`;
+                if (c.ci && String(c.ci).trim() !== '') pacienteTexto += `, C.I. ${esc(String(c.ci).trim())}`;
                 const equipo = [c.instrumentista, c.transportista].filter(x => x && String(x).trim() !== '').join(' / ') || 'Por asignar';
                 const tags = (c.sistemas || []).filter(s => String(s).trim() !== '')
                     .map(s => `<span class="mini-tag purple"><i class="fa-solid fa-layer-group"></i> ${esc(String(s).trim())}</span>`).join('');
@@ -939,7 +1107,7 @@ listContainer.innerHTML += `
                     </div>
                     <div class="card-field"><strong>🏥 Clínica:</strong> ${esc(c.clinica)}</div>
                     <div class="card-field"><strong>👨🏻‍⚕️ Doctor (a):</strong> ${esc(c.medico)}</div>
-                    <div class="card-field"><strong>👤 Paciente:</strong> ${esc(pacienteTexto)}</div>
+                    <div class="card-field"><strong>👤 Paciente:</strong> ${pacienteTexto}</div>
                     <div class="card-field"><strong>🚑 Inst. / Transp:</strong> ${esc(equipo)}</div>
                     <div class="card-field"><strong>📱 RDV:</strong> ${esc(c.rdv || 'No asignado')}</div>
                     <div class="card-field"><strong>🔑 Aprobación:</strong> <input type="text" class="apr-input" id="aprInput_${i}" list="aprOpciones" maxlength="300" autocomplete="off"></div>
@@ -973,7 +1141,7 @@ listContainer.innerHTML += `
             msg.style.color = '#64748b';
             msg.innerText = "Guardando...";
             try {
-                const r = await enviarAlServidor({ action: 'guardarAprobacion', clave: claveTemporal, fecha: fecha, items: items });
+                const r = await enviarAlServidor({ action: 'guardarAprobacion', ...credencial, fecha: fecha, items: items });
                 if (r.ok) {
                     if (r.guardadas > 0) aprCambios = true;
                     let texto = r.guardadas === 1 ? "✓ 1 aprobación guardada." : `✓ ${r.guardadas} aprobaciones guardadas.`;
@@ -984,7 +1152,7 @@ listContainer.innerHTML += `
                     msg.innerText = texto;
                 } else {
                     msg.style.color = '#c62828';
-                    msg.innerText = r.claveIncorrecta ? "Contraseña incorrecta." : (r.error || "No se pudo guardar.");
+                    msg.innerText = textoErrorServidor(r, "No se pudo guardar.");
                     okBtn.disabled = false;
                 }
             } catch (err) {
@@ -1018,7 +1186,7 @@ listContainer.innerHTML += `
         });
 
         let lastCheck = localStorage.getItem('last_webapp_version');
-        let currentVersion = "2026.10.12.1";
+        let currentVersion = "2026.10.13.1";
 
         if (lastCheck && lastCheck !== currentVersion) {
             localStorage.setItem('last_webapp_version', currentVersion);
