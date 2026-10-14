@@ -114,6 +114,9 @@
         .status-green .day-number { color: #ffffff; }
         .status-red { background-color: #c62828 !important; border-color: #b71c1c; }
         .status-red .day-number { color: #ffffff; }
+        /* Día con registros pero ninguna cirugía ejecutada (todas suspendidas o devueltas) */
+        .status-void { background-color: #f1f5f9 !important; border-color: #cbd5e1; }
+        .status-void .info-badge { background-color: #e2e8f0; color: #64748b; }
         
         .info-badge { font-size: 8px; font-weight: normal; background-color: rgba(255, 255, 255, 0.25); text-align: center; color: #ffffff; border-radius: 4px; padding: 1px; text-transform: uppercase; letter-spacing: 0.1px; }
         
@@ -588,10 +591,12 @@
                 let badgeHtml = '';
 
                 if(tieneCirugia && tieneCirugia.length > 0) {
-                    let count = tieneCirugia.length;
+                    // Solo cuentan las cirugías realmente ejecutadas: las SUSPENDIDA y DEVUELTO se quedan en el registro pero no suman
+                    let count = tieneCirugia.filter(esCirugiaEjecutada).length;
                     badgeHtml = `<span class="info-badge">${count} Cx</span>`;
                     let targetDate = new Date(anoSelected, mesSelected, day);
-                    cellClass = (targetDate < hoy) ? 'status-red' : 'status-green';
+                    if (count === 0) cellClass = 'status-void';
+                    else cellClass = (targetDate < hoy) ? 'status-red' : 'status-green';
                 }
 
                 grid.innerHTML += `
@@ -610,6 +615,12 @@
                         <span class="day-number">${ddSiguiente}</span>
                     </div>`;
             }
+        }
+
+        // Una cirugía cuenta como ejecutada si su hora no es SUSPENDIDA ni DEVUELTO
+        function esCirugiaEjecutada(c) {
+            const h = String((c && c.hora) || '').trim().toUpperCase();
+            return h !== 'SUSPENDIDA' && h !== 'DEVUELTO';
         }
 
         function showDay(claveFecha) {
@@ -1199,7 +1210,7 @@ listContainer.innerHTML += `
         });
 
         let lastCheck = localStorage.getItem('last_webapp_version');
-        let currentVersion = "2026.10.13.2";
+        let currentVersion = "2026.10.13.3";
 
         if (lastCheck && lastCheck !== currentVersion) {
             localStorage.setItem('last_webapp_version', currentVersion);
