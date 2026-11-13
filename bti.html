@@ -144,7 +144,7 @@
             flex-grow: 1; 
             background-color: #f8fafc; 
             border-top: 1px solid #e2e8f0; 
-            padding: 12px; 
+            padding: 12px 12px calc(90px + env(safe-area-inset-bottom)); 
             overflow-y: auto; 
             -webkit-overflow-scrolling: touch; 
         }
@@ -452,7 +452,7 @@
 
         // Detecta si el archivo manifest o la aplicación cambió en el servidor
         let lastCheck = localStorage.getItem('last_webapp_version_bti');
-        let currentVersion = "2026.11.12.1"; // <-- CAMBIA ESTO cuando hagas una actualización fuerte
+        let currentVersion = "2026.11.13.1"; // <-- CAMBIA ESTO cuando hagas una actualización fuerte
 
         if (lastCheck && lastCheck !== currentVersion) {
             localStorage.setItem('last_webapp_version_bti', currentVersion);

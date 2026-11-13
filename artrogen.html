@@ -264,7 +264,7 @@
             flex-grow: 1; 
             background-color: #f8fafc; 
             border-top: 1px solid #e2e8f0; 
-            padding: 12px; 
+            padding: 12px 12px calc(90px + env(safe-area-inset-bottom)); 
             overflow-y: auto; 
             -webkit-overflow-scrolling: touch; 
         }
@@ -1214,7 +1214,7 @@ listContainer.innerHTML += `
         });
 
         let lastCheck = localStorage.getItem('last_webapp_version');
-        let currentVersion = "2026.11.12.1";
+        let currentVersion = "2026.11.13.1";
 
         if (lastCheck && lastCheck !== currentVersion) {
             localStorage.setItem('last_webapp_version', currentVersion);

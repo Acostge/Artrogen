@@ -5,51 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#ffffff">
     <title>PIEMCA - Carteleras</title>
-    <link rel="manifest" href="./manifest.json?v=1.12">
+<link rel="manifest" href="./manifest.json?v=1.12">
 
-    <link rel="icon" type="image/png" sizes="192x192" href="A.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="A.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="A.png">
+<link rel="icon" type="image/png" sizes="192x192" href="A.png">
+<link rel="icon" type="image/png" sizes="512x512" href="A.png">
+<link rel="apple-touch-icon" sizes="180x180" href="A.png">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: #f4f6f9; min-height: 100dvh; }
+        html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+        body { background-color: #f4f6f9; position: fixed; inset: 0; width: 100%; }
         .portada {
-            width: 100%; max-width: 440px; margin: 0 auto; min-height: 100dvh;
+            width: 100%; max-width: 440px; margin: 0 auto; height: 100%; overflow: hidden;
             background: #ffffff; display: flex; flex-direction: column;
-            padding: 32px 24px calc(40px + env(safe-area-inset-bottom));
+            padding: clamp(24px, 6dvh, 56px) 24px calc(24px + env(safe-area-inset-bottom));
             animation: entrar 0.3s ease-out;
         }
         @keyframes entrar { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-        
-        /* Logo centrado arriba */
-        .logo-wrap { 
-            width: 100%; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            padding-top: 8px;
-            flex-shrink: 0;
-        }
-        .logo-wrap img { width: 100%; max-width: 280px; max-height: 110px; object-fit: contain; display: block; }
-        
-        /* Tarjetas centradas en el espacio disponible y con mayor separación */
-        .tarjetas { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 32px; 
-            margin: auto 0;
-            padding: 24px 0;
-        }
+        .logo-wrap { text-align: center; flex-shrink: 0; }
+        .logo-wrap img { width: 100%; max-width: 300px; max-height: 16dvh; object-fit: contain; }
+        .tarjetas { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: clamp(22px, 4.5dvh, 40px); padding-bottom: 4dvh; }
         .tarjeta {
             display: flex; align-items: center; gap: 18px; text-decoration: none; color: inherit;
-            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 20px 18px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 22px; padding: clamp(18px, 3dvh, 26px) 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
         }
         .tarjeta:active { transform: scale(0.98); }
-        .tarjeta.artrogen:hover { border-color: rgba(17,18,54,0.4); box-shadow: 0 6px 16px rgba(0,0,0,0.09); }
-        .tarjeta.bti:hover { border-color: rgba(122,28,107,0.4); box-shadow: 0 6px 16px rgba(0,0,0,0.09); }
-        .icono { width: 80px; height: 80px; flex-shrink: 0; border-radius: 16px; background: #f8fafc; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; }
-        .icono img { width: 56px; height: 56px; object-fit: contain; }
+        .tarjeta.artrogen:hover { border-color: rgba(17,18,54,0.4); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .tarjeta.bti:hover { border-color: rgba(122,28,107,0.4); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .icono { width: 88px; height: 88px; flex-shrink: 0; border-radius: 16px; background: #f8fafc; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; }
+        .icono img { width: 62px; height: 62px; object-fit: contain; }
         .textos { flex: 1; min-width: 0; }
         .titulo-fila { display: flex; align-items: center; justify-content: space-between; }
         .textos h2 { font-size: 17px; font-weight: 800; letter-spacing: 0.5px; }
@@ -94,7 +78,7 @@
     (function() {
         let lastCheck = null;
         try { lastCheck = localStorage.getItem('last_webapp_version'); } catch (e) {}
-        let currentVersion = "2026.11.12.1";
+        let currentVersion = "2026.11.13.1";
 
         if (lastCheck && lastCheck !== currentVersion) {
             try { localStorage.setItem('last_webapp_version', currentVersion); } catch (e) {}
