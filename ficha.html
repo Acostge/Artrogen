@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PIEMCA - Ficha Qx</title>
+    
+    <link rel="icon" type="image/png" href="ficha.png">
+    <link rel="apple-touch-icon" href="ficha.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="#083264">
+    <link rel="manifest" href="./manifest.json?v=1.12">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+    <style>
+        :root {
+            --piemca-bg: #f4f8fb;          
+            --piemca-card: #ffffff;        
+            --piemca-blue-light: #007cc2;  
+            --piemca-blue-dark: #083264;   
+            --piemca-text-main: #0c1e36;   
+            --piemca-text-muted: #48596C;  
+            --piemca-border-radius: 16px;  
+            
+            --biobrace-green: #71bf44;
+            --biobrace-dark: #002855;
+            --mtf-mustard: #f19a20;
+            --mtf-blue: #005ca9;
+            
+            /* PALETA BTI ENDORET */
+            --endoret-pink: #c02582;
+            --endoret-gray: #4d4d4d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+         body {
+            background-color: var(--piemca-bg);
+            color: var(--piemca-text-main);
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+        }
+
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 0 16px 30px 16px;
+        }
+
+        .sticky-header {
+            position: -webkit-sticky;
+            position: sticky;
+            top: 0;
+            background-color: var(--piemca-bg);
+            padding-top: 10px;
+            padding-bottom: 6px;
+            z-index: 90;
+            border-bottom: 1px solid rgba(8, 50, 100, 0.04);
+            box-shadow: 0 8px 20px -10px rgba(8, 50, 100, 0.04);
+
+            transform: translateZ(0);
+            backface-visibility: hidden;
+
+        }
+
+        /* Botón para volver a la portada de carteleras */
+        .btn-inicio {
+            position: absolute; left: 0; top: 14px; z-index: 2;
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 7px 12px; border: 1.5px solid var(--piemca-blue-light); border-radius: 10px;
+            background: #ffffff; color: var(--piemca-blue-dark);
+            font-size: 0.75rem; font-weight: 700; text-decoration: none;
+        }
+        .btn-inicio:active { background: #e6f3fb; transform: scale(0.97); }
+
+        header {
+            margin-bottom: 8px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        header p {
+            font-size: 0.75rem;
+            color: var(--piemca-text-muted);
+            margin-top: 1px;
+            font-weight: 500;
+        }
+
+        .selector-card {
+            background: var(--piemca-card);
+            padding: 10px 14px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(8, 50, 100, 0.03);
+            margin-bottom: 8px;
+            border: 1px solid rgba(0, 124, 194, 0.05);
+        }
+
+        .form-group { margin-bottom: 10px; }
+        .form-group:last-child { margin-bottom: 0; }
+
+        label {
+            display: block;
+            font-size: 0.78rem;        
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--piemca-blue-dark);
+            margin-bottom: 6px;        
+            letter-spacing: 0.5px;
+        }
+
+        select {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1.5px solid #e1e9f0;
+            border-radius: 10px;
+            background-color: #fafcfe;
+            font-size: 0.82rem;        
+            font-weight: 600;
+            color: var(--piemca-text-main);
+            outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23007cc2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        select:disabled {
+            background-color: #f4f8fb;
+            color: #a0aec0;
+            cursor: not-allowed;
+            border-color: #e2e8f0;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a0aec0' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        }
+
+        .metric-badge {
+            background: linear-gradient(135deg, var(--piemca-blue-dark), var(--piemca-blue-light));
+            color: white;
+            padding: 10px 14px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 124, 194, 0.12);
+        }
+
+        .metric-badge h2 { font-size: 1.8rem; font-weight: 800; line-height: 1; }
+        .metric-badge p { font-size: 0.7rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 3px; font-weight: 700; }
+
+        .scrollable-content { margin-top: 10px; }
+
+        .chart-card {
+            background: var(--piemca-card);
+            padding: 16px;
+            border-radius: var(--piemca-border-radius);
+            box-shadow: 0 4px 20px rgba(8, 50, 100, 0.03);
+            margin-bottom: 12px;
+            border: 1px solid rgba(8, 50, 100, 0.02);
+        }
+
+        .chart-card h3 {
+            font-size: 0.85rem;
+            color: var(--piemca-blue-dark);
+            margin-bottom: 12px;
+            font-weight: 700;
+            border-left: 3.5px solid var(--piemca-blue-light);
+            padding-left: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .ranking-card {
+            background: var(--piemca-card);
+            padding: 20px;
+            border-radius: var(--piemca-border-radius);
+            box-shadow: 0 8px 24px rgba(8, 50, 100, 0.06);
+            border: 1.5px solid rgba(0, 124, 194, 0.1);
+            margin-top: 14px;
+        }
+
+        .ranking-card h3 {
+            font-size: 0.8rem;
+            color: var(--piemca-blue-dark);
+            margin-bottom: 14px;
+            font-weight: 800;
+            border-left: 4px solid var(--piemca-blue-light);
+            padding-left: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ranking-table th {
+            text-align: left;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--piemca-text-muted);
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e1e9f0;
+            letter-spacing: 0.5px;
+        }
+
+        .ranking-table td {
+            padding: 7px 0;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #f0f4f8;
+            color: var(--piemca-text-main);
+            vertical-align: middle;
+        }
+
+        .ranking-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .col-pos {
+            width: 36px;
+            font-weight: 800;
+            color: var(--piemca-blue-light);
+            font-size: 0.9rem;
+        }
+
+        .top-podium {
+            color: #f19a20 !important;
+        }
+
+        .col-doc {
+            font-weight: 600;
+        }
+
+        .col-cant {
+            text-align: right;
+            font-weight: 700;
+            color: var(--piemca-blue-dark);
+            font-size: 0.95rem;
+            width: 60px;
+        }
+
+        .chart-card.lipogems-theme {
+            background: linear-gradient(135deg, rgba(242, 110, 33, 0.04) 0%, rgba(12, 60, 108, 0.04) 100%);
+            border: 1.5px solid rgba(242, 110, 33, 0.12);
+        }
+
+        /* TEMA ENDORET (BTI) */
+        .chart-card.endoret-theme {
+            background: linear-gradient(135deg, rgba(192, 37, 130, 0.04) 0%, rgba(77, 77, 77, 0.04) 100%);
+            border: 1.5px solid rgba(192, 37, 130, 0.12);
+        }
+
+        .chart-card.biobrace-theme {
+            background: linear-gradient(135deg, rgba(113, 191, 68, 0.05) 0%, rgba(0, 40, 85, 0.04) 100%);
+            border: 1.5px solid rgba(113, 191, 68, 0.15);
+        }
+
+        .chart-card.mtf-theme {
+            background: linear-gradient(135deg, rgba(241, 154, 32, 0.05) 0%, rgba(0, 92, 169, 0.05) 100%);
+            border: 1.5px solid rgba(241, 154, 32, 0.15);
+        }
+
+        .floating-badge {
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 800;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1.5px solid #ffffff;
+            animation: popIn 0.3s ease-out;
+        }
+        
+        .badge-lipo { background-color: #f26e21; box-shadow: 0 3px 8px rgba(242, 110, 33, 0.3); }
+        .badge-endoret { background-color: var(--endoret-pink); box-shadow: 0 3px 8px rgba(192, 37, 130, 0.3); }
+        .badge-bio { background-color: var(--biobrace-green); box-shadow: 0 3px 8px rgba(113, 191, 68, 0.4); }
+        .badge-mtf { background-color: var(--mtf-mustard); box-shadow: 0 3px 8px rgba(241, 154, 32, 0.4); }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            90% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .chart-container { position: relative; width: 100%; height: 215px; }
+
+        #loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--piemca-bg);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            border: 4px solid #e1e9f0;
+            border-top: 4px solid var(--piemca-blue-light);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <p style="margin-top: 14px; font-weight: 600; color: var(--piemca-blue-dark); font-size: 0.9rem; letter-spacing: 0.5px;">PIEMCA DATA CONNECT...</p>
+    </div>
+
+    <div class="app-container">
+        <div class="sticky-header">
+            <a class="btn-inicio" href="./index.html" aria-label="Volver a la portada">&#8962; Inicio</a>
+            <header>
+                <img src="logo.png" alt="PIEMCA LOGO" style="height: 70px; width: auto; object-fit: contain; margin-bottom: 2px; margin-top: 2px;">
+                <p>Ficha Quirúrgica Digital</p>
+                <p id="txt-actualizacion" style="font-size: 0.68rem; color: #5c728a; font-weight: 400; margin-top: 4px; opacity: 0.8; font-style: italic;"></p>
+            </header>
+
+            <div class="selector-card">
+                <div class="form-group">
+                    <label for="select-doctor">Médico / Especialista</label>
+                    <select id="select-doctor"><option value="">Seleccione un Doctor...</option></select>
+                </div>
+                <div class="form-group">
+                    <label for="select-anio">Año Fiscal</label>
+                    <select id="select-anio" disabled><option value="">Seleccione el año...</option></select>
+                </div>
+            </div>
+
+            <div id="badge-container" class="hidden">
+                <div class="metric-badge">
+                    <h2 id="txt-total">0</h2>
+                    <p id="lbl-total">Cirugías Realizadas</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN VISTA INICIAL: TABLA DE BIENVENIDA -->
+        <div id="home-content" class="scrollable-content">
+            <div class="ranking-card">
+                <h3>🏆 TOP 10 - RANKING POR ESPECIALISTA</h3>
+                <table class="ranking-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">Pto</th>
+                            <th>Doctor (a)</th>
+                            <th style="text-align: right;">Cirugías</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body-ranking">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SECCIÓN DETALLE INDIVIDUAL -->
+        <div id="dashboard-content" class="scrollable-content hidden">
+            <div class="chart-card">
+                <h3 id="title-meses">Evolución Mensual</h3>
+                <div class="chart-container" id="container-meses"><canvas id="chart-meses"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <h3>Total de Procedimientos por Línea</h3>
+                <div class="chart-container" id="container-lineas"><canvas id="chart-lineas"></canvas></div>
+            </div>
+
+            <div class="chart-card" id="card-mano">
+                <h3>✅ Sub-línea: Prótesis de Mano</h3>
+                <div class="chart-container" id="container-mano"><canvas id="chart-mano"></canvas></div>
+            </div>
+
+            <div class="chart-card" id="card-hombro">
+                <h3>✅ Sub-línea: Prótesis de Hombro</h3>
+                <div class="chart-container" id="container-hombro"><canvas id="chart-hombro"></canvas></div>
+            </div>
+
+            <div class="chart-card" id="card-cadera">
+                <h3>✅ Sub-línea: Prótesis de Cadera</h3>
+                <div class="chart-container" id="container-cadera"><canvas id="chart-cadera"></canvas></div>
+            </div>
+
+            <div class="chart-card" id="card-rodilla">
+                <h3>✅ Sub-línea: Prótesis de Rodilla</h3>
+                <div class="chart-container" id="container-rodilla"><canvas id="chart-rodilla"></canvas></div>
+            </div>
+
+            <div class="chart-card">
+                <h3>♀️♂️ Procedimientos por Género</h3>
+                <div class="chart-container" id="container-genero" style="height: 170px;"><canvas id="chart-genero"></canvas></div>
+            </div>
+
+            <div class="chart-card lipogems-theme" id="card-lipogems">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 id="title-lipogems">💉 Lipogems System</h3>
+                    <div id="badge-lipogems" class="floating-badge badge-lipo">0</div>
+                </div>
+                <div class="chart-container" id="container-lipogems"><canvas id="chart-lipogems"></canvas></div>
+            </div>
+
+            <!-- TARJETA ENDORET (DISEÑO IDÉNTICO A LIPOGEMS CON COLORES BTI) -->
+            <div class="chart-card endoret-theme" id="card-endoret">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 id="title-endoret">🩸 Endoret (PRGF)</h3>
+                    <div id="badge-endoret" class="floating-badge badge-endoret">0</div>
+                </div>
+                <div class="chart-container" id="container-endoret"><canvas id="chart-endoret"></canvas></div>
+            </div>
+
+            <div class="chart-card biobrace-theme" id="card-biobrace">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 style="margin-bottom: 0;">🧬 Biobrace</h3>
+                    <div id="badge-biobrace" class="floating-badge badge-bio">0</div>
+                </div>
+                <div class="chart-container" id="container-biobrace" style="height: 230px;"><canvas id="chart-biobrace"></canvas></div>
+            </div>
+
+            <div class="chart-card mtf-theme" id="card-mtf">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 style="margin-bottom: 0;">🧬 Allograft Tissue</h3>
+                    <div id="badge-mtf" class="floating-badge badge-mtf">0</div>
+                </div>
+                <div class="chart-container" id="container-mtf" style="height: 200px;"><canvas id="chart-mtf"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sistema de auto-actualización (igual que las carteleras). Cambia el número cuando hagas una actualización fuerte.
+        (function () {
+            let lastCheck = null;
+            try { lastCheck = localStorage.getItem('last_webapp_version_ficha'); } catch (e) {}
+            const currentVersion = "2026.11.18.1";
+            try { localStorage.setItem('last_webapp_version_ficha', currentVersion); } catch (e) {}
+            if (lastCheck && lastCheck !== currentVersion) {
+                if ('caches' in window) { caches.keys().then(function (n) { n.forEach(function (k) { caches.delete(k); }); }); }
+                setTimeout(function () { window.location.reload(true); }, 500);
+            }
+        })();
+
+        const API_URL = "https://script.google.com/macros/s/AKfycbwwNKsZvkX-7JJwR7rTcrwioOlH4qpKGPYog8t9ZiTwNJoeKdUhGg2U5sP4IYXhSVdwbA/exec";
+        
+        let bdData = {};
+        let catalogoBiobrace = []; // productos Biobrace en orden fijo (los manda el Apps Script)
+        let chartsInstance = {};
+
+        const selectDoctor = document.getElementById('select-doctor');
+        const selectAnio = document.getElementById('select-anio');
+        const homeContent = document.getElementById('home-content');
+        const dashboardContent = document.getElementById('dashboard-content');
+        const badgeContainer = document.getElementById('badge-container');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const txtTotal = document.getElementById('txt-total');
+        const lblTotal = document.getElementById('lbl-total');
+        const titleMeses = document.getElementById('title-meses');
+        const titleLipogems = document.getElementById('title-lipogems');
+        const titleEndoret = document.getElementById('title-endoret');
+        const tableBodyRanking = document.getElementById('table-body-ranking');
+
+        window.addEventListener('DOMContentLoaded', cargarDatos);
+
+        async function cargarDatos() {
+            try {
+                const response = await fetch(API_URL);
+                const resultado = await response.json();
+                if(resultado.error) { alert("Error: " + resultado.error); return; }
+
+                bdData = resultado.datos;
+                catalogoBiobrace = resultado.catalogoBiobrace || []; 
+                const fechaSincro = resultado.fechaActualizacion;
+
+                if (fechaSincro) {
+                    document.getElementById('txt-actualizacion').textContent = `Última sincronización de datos: ${fechaSincro}`;
+                }
+
+                const listaDoctores = Object.keys(bdData).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+                selectDoctor.innerHTML = '<option value="">Seleccione un Doctor...</option>';
+                listaDoctores.forEach(doc => {
+                    let opt = document.createElement('option');
+                    opt.value = doc; opt.textContent = doc;
+                    selectDoctor.appendChild(opt);
+                });
+
+                selectAnio.innerHTML = '<option value="">Seleccione el año...</option>';
+                selectAnio.disabled = true;
+
+                const anioActual = new Date().getFullYear().toString();
+                calcularYMostrarTop10(anioActual);
+
+                loadingOverlay.classList.add('hidden');
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Fallo de conexión de datos.");
+            }
+        }
+
+        selectAnio.addEventListener('change', () => {
+            const docSel = selectDoctor.value;
+            const anioSel = selectAnio.value;
+            if (docSel && anioSel) {
+                ejecutarDashboardIndividual(docSel, anioSel);
+            }
+        });
+
+        selectDoctor.addEventListener('change', () => {
+            const docSel = selectDoctor.value;
+            
+            if(!docSel) {
+                dashboardContent.classList.add('hidden');
+                badgeContainer.classList.add('hidden');
+                homeContent.classList.remove('hidden');
+                
+                selectAnio.innerHTML = '<option value="">Seleccione el año...</option>';
+                selectAnio.disabled = true;
+
+                const anioActual = new Date().getFullYear().toString();
+                calcularYMostrarTop10(anioActual);
+                return;
+            }
+
+            homeContent.classList.add('hidden');
+
+            const aniosMedico = Object.keys(bdData[docSel]).sort((a,b) => b - a);
+            selectAnio.innerHTML = '<option value="">Seleccione el año...</option>';
+            
+            aniosMedico.forEach(anio => {
+                if(anio !== "S/A") {
+                    let opt = document.createElement('option');
+                    opt.value = opt.textContent = anio;
+                    selectAnio.appendChild(opt);
+                }
+            });
+
+            let optGeneral = document.createElement('option');
+            optGeneral.value = "GENERAL"; optGeneral.textContent = "GENERAL";
+            selectAnio.appendChild(optGeneral);
+
+            selectAnio.disabled = false;
+            badgeContainer.classList.add('hidden');
+            dashboardContent.classList.add('hidden');
+        });
+
+        function ejecutarDashboardIndividual(docSel, anioSel) {
+            if(anioSel === "GENERAL") {
+                lblTotal.textContent = "Total de Cirugías en General";
+                titleMeses.textContent = "Evolución por Años Históricos";
+                titleLipogems.textContent = "💉 Lipogems por Años Históricos";
+                titleEndoret.textContent = "🩸 Endoret por Años Históricos";
+                const dataConsolidada = generarDataGeneral(bdData[docSel]);
+                renderizarDashboard(dataConsolidada, true);
+            } else {
+                lblTotal.textContent = "Cirugías Realizadas";
+                titleMeses.textContent = "Evolución Mensual";
+                titleLipogems.textContent = "💉 Lipogems System";
+                titleEndoret.textContent = "🩸 Endoret (PRGF)";
+                renderizarDashboard(bdData[docSel][anioSel], false);
+            }
+        }
+
+        function calcularYMostrarTop10(anio) {
+            tableBodyRanking.innerHTML = '';
+            let rankingDoctores = [];
+
+            Object.keys(bdData).forEach(doc => {
+                if (bdData[doc] && bdData[doc][anio]) {
+                    const totalCirugias = bdData[doc][anio].totalCirugias || 0;
+                    if (totalCirugias > 0) {
+                        rankingDoctores.push({ nombre: doc, total: totalCirugias });
+                    }
+                }
+            });
+
+            rankingDoctores.sort((a, b) => b.total - a.total);
+            const top10 = rankingDoctores.slice(0, 10);
+
+            if (top10.length === 0) {
+                tableBodyRanking.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px; color:var(--piemca-text-muted);">No hay registros de cirugías en el año ${anio}.</td></tr>`;
+                return;
+            }
+
+            top10.forEach((item, index) => {
+                const fila = document.createElement('tr');
+                const esPodio = index < 5 ? 'top-podium' : '';
+
+                fila.innerHTML = `
+                    <td class="col-pos ${esPodio}">#${index + 1}</td>
+                    <td class="col-doc">${item.nombre}</td>
+                    <td class="col-cant">${item.total}</td>
+                `;
+                tableBodyRanking.appendChild(fila);
+            });
+        }
+
+        function generarDataGeneral(doctorData) {
+            let general = {
+                totalCirugias: 0, porMes: [], porLinea: {}, porSubLinea: {},
+                porSexo: { "M": 0, "F": 0 }, totalLipogems: 0, porMesLipogems: [],
+                totalEndoret: 0, porMesEndoret: [],
+                totalBiobrace: 0, porProductoBiobrace: {},
+                totalMtf: 0, porTipoMtf: { "Aloinjertos Liofilizados": 0, "Aloinjertos Fresco / Congelados": 0 },
+                aniosLabels: [] 
+            };
+
+            const aniosAsignados = Object.keys(doctorData).filter(a => a !== "S/A").sort((a,b) => a - b);
+            general.aniosLabels = aniosAsignados;
+
+            aniosAsignados.forEach(anio => {
+                const dAnio = doctorData[anio];
+                general.totalCirugias += dAnio.totalCirugias || 0;
+                general.porMes.push(dAnio.totalCirugias || 0); 
+
+                const srcLinea = dAnio.porLineas || dAnio.porLinea || {};
+                Object.keys(srcLinea).forEach(lin => {
+                    general.porLinea[lin] = (general.porLinea[lin] || 0) + srcLinea[lin];
+                });
+
+                const srcSub = dAnio.porSubLinea || {};
+                Object.keys(srcSub).forEach(sub => {
+                    general.porSubLinea[sub] = (general.porSubLinea[sub] || 0) + srcSub[sub];
+                });
+
+                if(dAnio.porSexo) {
+                    general.porSexo.M += dAnio.porSexo.M || 0;
+                    general.porSexo.F += dAnio.porSexo.F || 0;
+                }
+
+                general.totalLipogems += dAnio.totalLipogems || 0;
+                general.porMesLipogems.push(dAnio.totalLipogems || 0);
+
+                general.totalEndoret += dAnio.totalEndoret || 0;
+                general.porMesEndoret.push(dAnio.totalEndoret || 0);
+
+                general.totalBiobrace += dAnio.totalBiobrace || 0;
+                
+                const srcBio = dAnio.porProductoBiobrace || {};
+                Object.keys(srcBio).forEach(prod => {
+                    general.porProductoBiobrace[prod] = (general.porProductoBiobrace[prod] || 0) + srcBio[prod];
+                });
+
+                general.totalMtf += dAnio.totalMtf || 0;
+                if(dAnio.porTipoMtf) {
+                    general.porTipoMtf["Aloinjertos Liofilizados"] += dAnio.porTipoMtf["Aloinjertos Liofilizados"] || 0;
+                    general.porTipoMtf["Aloinjertos Fresco / Congelados"] += dAnio.porTipoMtf["Aloinjertos Fresco / Congelados"] || 0;
+                }
+            });
+            return general;
+        }
+
+        // Parte un texto largo en varias líneas (para las etiquetas de los ejes)
+        function partirEtiqueta(texto, max) {
+            const palabras = String(texto).split(' ');
+            const lineas = [];
+            let actual = '';
+            palabras.forEach(p => {
+                if (actual && (actual + ' ' + p).length > max) {
+                    lineas.push(actual);
+                    actual = p;
+                } else {
+                    actual = (actual + ' ' + p).trim();
+                }
+            });
+            if (actual) lineas.push(actual);
+            return lineas.length > 1 ? lineas : (lineas[0] || '');
+        }
+
+        function reiniciarCanvas(idContainer, idCanvas) {
+            if (chartsInstance[idCanvas]) {
+                chartsInstance[idCanvas].destroy();
+                delete chartsInstance[idCanvas];
+            }
+            const container = document.getElementById(idContainer);
+            if (container) {
+                container.innerHTML = `<canvas id="${idCanvas}"></canvas>`;
+            }
+        }
+
+        function renderizarDashboard(dataAnio, esGeneral) {
+            dashboardContent.classList.remove('hidden');
+            badgeContainer.classList.remove('hidden');
+            txtTotal.textContent = dataAnio.totalCirugias;
+
+            Chart.register(ChartDataLabels);
+
+            const dataLabelsConfig = {
+                display: true, align: 'end', anchor: 'end', color: '#000000',
+                font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', weight: 'bold', size: 12 }, formatter: (value) => value
+            };
+
+            const dataLineasCrudaTop = dataAnio.porLineas || dataAnio.porLinea || {};
+
+            const LINEAS_OFICIALES = [
+                "Prótesis de Mano", "Prótesis de Hombro", "Cirugía de Mano", "Artroscopia",
+                "Prótesis de Rodilla", "Prótesis de Cadera", "Osteosíntesis", "Cirugía de Pie",
+                "Columna", "Máxilofacial"
+            ];
+            
+            let labelsLineasFiltradas = []; let valoresLineasFiltrados = [];
+            LINEAS_OFICIALES.forEach(linea => {
+                const valor = dataLineasCrudaTop[linea] || 0;
+                if (valor > 0) { labelsLineasFiltradas.push(linea); valoresLineasFiltrados.push(valor); }
+            });
+
+            reiniciarCanvas('container-lineas', 'chart-lineas');
+            const containerLineas = document.getElementById('container-lineas');
+            if(labelsLineasFiltradas.length > 0) {
+                containerLineas.style.height = `${Math.max(labelsLineasFiltradas.length * 35, 120)}px`;
+                const ctxLineas = document.getElementById('chart-lineas').getContext('2d');
+                chartsInstance.lineas = new Chart(ctxLineas, {
+                    type: 'bar', data: { labels: labelsLineasFiltradas, datasets: [{ data: valoresLineasFiltrados, backgroundColor: '#083264', borderRadius: 6, barThickness: 14 }] },
+                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: { padding: { right: 25 } }, plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: dataLabelsConfig }, scales: { x: { display: false, grace: '25%' }, y: { grid: { display: false }, ticks: { font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', weight: '600', size: 12 }, color: '#0c1e36' } } } }
+                });
+            } else { containerLineas.innerHTML = '<p style="text-align:center; color:var(--piemca-text-muted); font-size:0.85rem; padding:20px;">No hay registros.</p>'; }
+
+            reiniciarCanvas('container-meses', 'chart-meses');
+            const containerMeses = document.getElementById('container-meses');
+            let msgMeses = containerMeses.querySelector('.no-records-msg');
+
+            if (!dataAnio.totalCirugias || dataAnio.totalCirugias === 0) {
+                if (!msgMeses) {
+                    msgMeses = document.createElement('div');
+                    msgMeses.className = 'no-records-msg';
+                    msgMeses.style.textAlign = 'center';
+                    msgMeses.style.padding = '55px 0'; 
+                    msgMeses.style.color = '#5c728a';
+                    msgMeses.style.fontSize = '0.85rem';
+                    msgMeses.style.fontWeight = '500';
+                    msgMeses.textContent = 'No hay registros.';
+                    containerMeses.appendChild(msgMeses);
+                }
+                const canvasMeses = document.getElementById('chart-meses');
+                if (canvasMeses) canvasMeses.style.display = 'none';
+            } else {
+                if (msgMeses) msgMeses.remove();
+                const canvasMeses = document.getElementById('chart-meses');
+                if (canvasMeses) canvasMeses.style.display = 'block';
+
+                const ctxMeses = canvasMeses.getContext('2d');
+                const labelsEvolucion = esGeneral ? dataAnio.aniosLabels : ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                chartsInstance.meses = new Chart(ctxMeses, {
+                    type: 'bar', data: { labels: labelsEvolucion, datasets: [{ data: dataAnio.porMes, backgroundColor: '#083264', borderRadius: 5, barThickness: esGeneral ? 22 : 14 }] },
+                    options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 20 } }, plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { ...dataLabelsConfig, align: 'top', formatter: (value) => value > 0 ? value : '' } }, scales: { x: { grid: { display: false }, ticks: { font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', weight: '600', size: 11 } } }, y: { display: false, grace: '20%' } } }
+                });
+            }
+
+            reiniciarCanvas('container-genero', 'chart-genero');
+            const ctxGenero = document.getElementById('chart-genero').getContext('2d');
+            chartsInstance.genero = new Chart(ctxGenero, {
+                type: 'doughnut', 
+                data: { 
+                    labels: ['F', 'M'], 
+                    datasets: [{ 
+                        data: [dataAnio.porSexo.F, dataAnio.porSexo.M], 
+                        backgroundColor: ['#ff6b8b', '#007cc2'], 
+                        borderWidth: 3, 
+                        borderColor: '#ffffff' 
+                    }] 
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { 
+                            position: 'right', 
+                            labels: { 
+                                boxWidth: 15, 
+                                font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', weight: 'bold', size: 13 }, 
+                                padding: 10 
+                            }, 
+                            align: 'center', 
+                            display: true 
+                        }, 
+                        datalabels: { display: false }, 
+                        tooltip: { 
+                            enabled: true, 
+                            backgroundColor: 'rgba(12, 30, 54, 0.9)', 
+                            padding: 8,
+                            displayColors: true, 
+                            boxWidth: 8, 
+                            boxHeight: 8,
+                            boxPadding: 4,
+                            titleFont: { size: 0 }, 
+                            bodyFont: { 
+                                family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', 
+                                weight: 'bold', 
+                                size: 13 
+                            },
+                            callbacks: {
+                                title: () => '', 
+                                label: function(context) {
+                                    return ` ${context.raw}`; 
+                                }
+                            }
+                        } 
+                    }, 
+                    layout: { padding: { right: 40 } } 
+                }
+            });
+
+            // LIPOGEMS
+            const dataLipogemsOrigen = dataAnio.porMesLipogems || [];
+            const totalLipogemsAnio = dataAnio.totalLipogems || 0;
+            const cardLipogems = document.getElementById('card-lipogems');
+            const badgeLipogems = document.getElementById('badge-lipogems');
+
+            if(totalLipogemsAnio > 0) {
+                cardLipogems.classList.remove('hidden');
+                badgeLipogems.textContent = totalLipogemsAnio;
+                reiniciarCanvas('container-lipogems', 'chart-lipogems');
+                const ctxLipogems = document.getElementById('chart-lipogems').getContext('2d');
+                const labelsLipoEvolucion = esGeneral ? dataAnio.aniosLabels : ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                chartsInstance.lipogems = new Chart(ctxLipogems, {
+                    type: 'bar', data: { labels: labelsLipoEvolucion, datasets: [{ data: dataLipogemsOrigen, backgroundColor: '#f26e21', borderRadius: 5, barThickness: esGeneral ? 22 : 14 }] },
+                    options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 20 } }, plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { ...dataLabelsConfig, align: 'top', color: '#0c3c6c', formatter: (value) => value > 0 ? value : '' } }, scales: { x: { grid: { display: false }, ticks: { font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', weight: '600', size: 11 } } }, y: { display: false, grace: '20%' } } }
+                });
+            } else { cardLipogems.classList.add('hidden'); }
+
+            // ENDORET (PRGF) - MIMETIZADO CON BTI Y LIPOGEMS
+            const dataEndoretOrigen = dataAnio.porMesEndoret || [];
+            const totalEndoretAnio = dataAnio.totalEndoret || 0;
+            const cardEndoret = document.getElementById('card-endoret');
+            const badgeEndoret = document.getElementById('badge-endoret');
+
+            if(totalEndoretAnio > 0) {
+                cardEndoret.classList.remove('hidden');
+                badgeEndoret.textContent = totalEndoretAnio;
+                reiniciarCanvas('container-endoret', 'chart-endoret');
+                const ctxEndoret = document.getElementById('chart-endoret').getContext('2d');
+                const labelsEndoretEvolucion = esGeneral ? dataAnio.aniosLabels : ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                chartsInstance.endoret = new Chart(ctxEndoret, {
+                    type: 'bar', data: { labels: labelsEndoretEvolucion, datasets: [{ data: dataEndoretOrigen, backgroundColor: '#c02582', borderRadius: 5, barThickness: esGeneral ? 22 : 14 }] },
+                    options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 20 } }, plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { ...dataLabelsConfig, align: 'top', color: '#4d4d4d', formatter: (value) => value > 0 ? value : '' } }, scales: { x: { grid: { display: false }, ticks: { font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', weight: '600', size: 11 } } }, y: { display: false, grace: '20%' } } }
+                });
+            } else { cardEndoret.classList.add('hidden'); }
+
+            // BIOBRACE
+            const cardBiobrace = document.getElementById('card-biobrace');
+            const badgeBiobrace = document.getElementById('badge-biobrace');
+            const dataProdBiobrace = dataAnio.porProductoBiobrace || {};
+            const totalBiobraceAnio = dataAnio.totalBiobrace || 0;
+
+            if(totalBiobraceAnio > 0) {
+                cardBiobrace.classList.remove('hidden');
+                badgeBiobrace.textContent = totalBiobraceAnio;
+                reiniciarCanvas('container-biobrace', 'chart-biobrace');
+                // Productos en el orden fijo que manda el Apps Script (más vendidos primero);
+                // si llegara alguno que no esté en esa lista, se agrega al final.
+                const labelsBiobrace = catalogoBiobrace.slice();
+                Object.keys(dataProdBiobrace).forEach(p => { if (!labelsBiobrace.includes(p)) labelsBiobrace.push(p); });
+                const valoresBiobrace = labelsBiobrace.map(prod => dataProdBiobrace[prod] || 0);
+                // En el eje se quita la palabra "Biobrace" (la tarjeta ya lo dice) y se parte en líneas si es larga
+                const etiquetasEjeBiobrace = labelsBiobrace.map(p => partirEtiqueta(p.replace(/^bio\s*brace\s*/i, '') || p, 14));
+                const ctxBiobrace = document.getElementById('chart-biobrace').getContext('2d');
+                chartsInstance.biobrace = new Chart(ctxBiobrace, {
+                    type: 'line', data: { labels: etiquetasEjeBiobrace, datasets: [{ data: valoresBiobrace, borderColor: '#002855', backgroundColor: '#71bf44', borderWidth: 3, pointBackgroundColor: '#71bf44', pointBorderColor: '#002855', pointBorderWidth: 2, pointRadius: 6, pointHoverRadius: 8, tension: 0.1 }] },
+                    options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 25, left: 10, right: 10 } }, plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { display: true, align: 'top', anchor: 'end', color: '#002855', font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', weight: 'bold', size: 13 }, formatter: (value) => value } }, scales: { x: { grid: { display: true, color: 'rgba(0, 40, 85, 0.05)' }, ticks: { font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', weight: '600', size: 10.5 }, color: '#002855' } }, y: { display: false, grace: '35%' } } }
+                });
+            } else { cardBiobrace.classList.add('hidden'); }
+
+            // MTF
+            const cardMtf = document.getElementById('card-mtf');
+            const badgeMtf = document.getElementById('badge-mtf');
+            const dataTiposMtf = dataAnio.porTipoMtf || {};
+            const totalMtfAnio = dataAnio.totalMtf || 0;
+
+            if(totalMtfAnio > 0) {
+                cardMtf.classList.remove('hidden');
+                badgeMtf.textContent = totalMtfAnio;
+                reiniciarCanvas('container-mtf', 'chart-mtf');
+                const valoresMtf = [dataTiposMtf["Aloinjertos Liofilizados"] || 0, dataTiposMtf["Aloinjertos Fresco / Congelados"] || 0];
+                const ctxMtf = document.getElementById('chart-mtf').getContext('2d');
+                chartsInstance.mtf = new Chart(ctxMtf, {
+                    type: 'line', data: { labels: ['Liofilizados', 'Fresco / Congelados'], datasets: [{ data: valoresMtf, borderColor: '#005ca9', backgroundColor: '#f19a20', borderWidth: 3, pointBackgroundColor: '#f19a20', pointBorderColor: '#005ca9', pointBorderWidth: 2, pointRadius: 6, pointHoverRadius: 8, tension: 0.1 }] },
+                    options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 25, left: 25, right: 25 } }, plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { display: true, align: 'top', anchor: 'end', color: '#005ca9', font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', weight: 'bold', size: 13 }, formatter: (value) => value } }, scales: { x: { grid: { display: true, color: 'rgba(0, 92, 169, 0.05)' }, ticks: { font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', weight: '600', size: 11 }, color: '#005ca9' } }, y: { display: false, grace: '35%' } } }
+                });
+            } else { cardMtf.classList.add('hidden'); }
+
+            const PROTESIS_MANO = ["Prótesis Maïa", "Sist. Digitalis MCP", "Sist. Digitalis PIP"];
+            const PROTESIS_RODILLA = ["K-MOD Derecha", "K-MOD Izquierda", "K-Mono RL/LM Der.", "K-Mono RM/LL Der.", "K-Mono RL/LM Izq.", "K-Mono RM/LL Izq.", "K-MOD Rev. Derecha", "K-MOD Rev. Izquierda", "3D Derecha", "3D Izquierda"];
+            const PROTESIS_CADERA = ["Dualis Cup", "Dualis Cup + Bioball Syst.", "Dualis Cup + F/Short Stem", "Dualis Cup + FIN Stem", "Dualis Cup + Korus Stem", "Dualis Cup + SMR Stem", "F/DMD Cup", "F/DMD Cup + Bioball Syst.", "F/DMD Cup + Dualis Cup", "F/DMD Cup + F/Short Stem", "F/DMD Cup + FIN Stem", "F/DMD Cup + Korus Stem", "F/DMD Cup + SMR Stem", "FIN II Cup", "FIN II Cup + Bioball Syst.", "FIN II Cup + F/Short Stem", "FIN II Cup + FIN Stem", "FIN II Cup + Korus Stem", "FIN II Cup + SMR Stem", "Muller", "Muller Cup + Bioball Syst.", "Muller Cup + F/Short Stem", "Muller Cup + FIN Stem", "Muller Cup + Korus Stem", "Muller Cup + SMR Stem", "Bioball Syst.", "F/Short Stem", "Korus Stem", "FIN Stem", "SMR Stem", "Thompson System"];
+            const PROTESIS_HOMBRO = ["Humelock Cem Anatómica FX", "Humelock N/cem Anatómica FX", "Humelock Cem Reversa FX", "Humelock N/cem Reversa FX", "Humeris Anatómica FX", "Humeris Reversa FX", "Humelock Revisión FX", "EasyTech Anatómica FX", "EasyTech Reversa FX", "H/Foundation DJO", "H/Reversa DJO"];
+            
+            const dataSubCruda = dataAnio.porSubLinea || {};
+
+function procesarArticulacion(idCanvas, idCard, idContainer, catalogo, colorBarra) {
+                let labelsFiltradas = []; let valoresFiltrados = [];
+                const clavesSubCruda = Object.keys(dataSubCruda);
+
+                catalogo.forEach(item => {
+                    const claveEncontrada = clavesSubCruda.find(clave => 
+                        clave.trim().toLowerCase() === item.trim().toLowerCase()
+                    );
+                    const valor = claveEncontrada ? dataSubCruda[claveEncontrada] : 0;
+                    if (valor > 0) { labelsFiltradas.push(item); valoresFiltrados.push(valor); }
+                });
+
+                const cardElement = document.getElementById(idCard);
+                if (labelsFiltradas.length > 0) {
+                    cardElement.classList.remove('hidden');
+                    reiniciarCanvas(idContainer, idCanvas);
+                    document.getElementById(idContainer).style.height = `${Math.max(labelsFiltradas.length * 42, 120)}px`;
+                    const ctx = document.getElementById(idCanvas).getContext('2d');
+                    chartsInstance[idCanvas] = new Chart(ctx, {
+                        type: 'bar', 
+                        data: { 
+                            labels: labelsFiltradas, 
+                            datasets: [{ data: valoresFiltrados, backgroundColor: colorBarra, borderRadius: 6, barThickness: 12 }] 
+                        },
+                        options: { 
+                            indexAxis: 'y', 
+                            responsive: true, 
+                            maintainAspectRatio: false, 
+                            layout: { padding: { right: 25, left: 10 } }, 
+                            plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: dataLabelsConfig }, 
+                            scales: { 
+                                x: { display: false, grace: '25%' }, 
+                                y: { 
+                                    grid: { display: false }, 
+                                    ticks: { 
+                                        font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', size: 11, weight: '600' }, 
+                                        color: '#5c728a',
+                                        // Función que divide los nombres largos en varias líneas de máximo 18 caracteres
+                                        callback: function(val, index) {
+                                            let label = this.getLabelForValue(val);
+                                            if (typeof label === 'string' && label.length > 18) {
+                                                let palabras = label.split(' ');
+                                                let lineas = [];
+                                                let lineaActual = '';
+
+                                                palabras.forEach(p => {
+                                                    if ((lineaActual + ' ' + p).trim().length > 18) {
+                                                        if (lineaActual) lineas.push(lineaActual);
+                                                        lineaActual = p;
+                                                    } else {
+                                                        lineaActual = (lineaActual + ' ' + p).trim();
+                                                    }
+                                                });
+                                                if (lineaActual) lineas.push(lineaActual);
+                                                return lineas;
+                                            }
+                                            return label;
+                                        }
+                                    } 
+                                } 
+                            } 
+                        }
+                    });
+                } else { cardElement.classList.add('hidden'); }
+            }
+
+            procesarArticulacion('chart-mano', 'card-mano', 'container-mano', PROTESIS_MANO, '#F1A983');
+            procesarArticulacion('chart-hombro', 'card-hombro', 'container-hombro', PROTESIS_HOMBRO, '#FFC000');
+            procesarArticulacion('chart-cadera', 'card-cadera', 'container-cadera', PROTESIS_CADERA, '#61CBF3');
+            procesarArticulacion('chart-rodilla', 'card-rodilla', 'container-rodilla', PROTESIS_RODILLA, '#8ED973');
+        }
+    </script>
+</body>
+</html>

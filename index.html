@@ -23,15 +23,16 @@
         @keyframes entrar { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
         .logo-wrap { text-align: center; flex-shrink: 0; }
         .logo-wrap img { width: 100%; max-width: 300px; max-height: 16dvh; object-fit: contain; }
-        .tarjetas { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: clamp(22px, 4.5dvh, 40px); padding-bottom: 4dvh; }
+        .tarjetas { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: clamp(14px, 3.2dvh, 32px); padding-bottom: 3dvh; }
         .tarjeta {
             display: flex; align-items: center; gap: 18px; text-decoration: none; color: inherit;
-            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 22px; padding: clamp(18px, 3dvh, 26px) 20px;
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 22px; padding: clamp(12px, 2.2dvh, 24px) 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
         }
         .tarjeta:active { transform: scale(0.98); }
         .tarjeta.artrogen:hover { border-color: rgba(17,18,54,0.4); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .tarjeta.bti:hover { border-color: rgba(122,28,107,0.4); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .tarjeta.ficha:hover { border-color: rgba(8,50,100,0.4); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .icono { width: 88px; height: 88px; flex-shrink: 0; border-radius: 16px; background: #f8fafc; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; }
         .icono img { width: 62px; height: 62px; object-fit: contain; }
         .textos { flex: 1; min-width: 0; }
@@ -39,6 +40,7 @@
         .textos h2 { font-size: 17px; font-weight: 800; letter-spacing: 0.5px; }
         .tarjeta.artrogen h2 { color: #1E293B; }
         .tarjeta.bti h2 { color: #7A1C6B; }
+        .tarjeta.ficha h2 { color: #083264; }
         .flecha { width: 20px; height: 20px; color: #94a3b8; flex-shrink: 0; }
         .textos p { font-size: 13px; color: #64748b; margin-top: 6px; line-height: 1.35; }
     </style>
@@ -69,6 +71,17 @@
                     <p>Programación general de procedimientos Endoret.</p>
                 </div>
             </a>
+
+            <a class="tarjeta ficha" href="./ficha.html">
+                <div class="icono"><img src="ficha.png" alt="Ficha Quirúrgica"></div>
+                <div class="textos">
+                    <div class="titulo-fila">
+                        <h2>FICHA QUIRÚRGICA</h2>
+                        <svg class="flecha" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                    <p>Procedimientos e histórico de ventas por médico.</p>
+                </div>
+            </a>
         </div>
     </main>
 
@@ -78,7 +91,7 @@
     (function() {
         let lastCheck = null;
         try { lastCheck = localStorage.getItem('last_webapp_version'); } catch (e) {}
-        let currentVersion = "2026.11.13.1";
+        let currentVersion = "2026.11.18.1";
 
         if (lastCheck && lastCheck !== currentVersion) {
             try { localStorage.setItem('last_webapp_version', currentVersion); } catch (e) {}
