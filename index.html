@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#ffffff">
     <title>PIEMCA - Carteleras</title>
-<link rel="manifest" href="./manifest.json?v=1.13">
+<link rel="manifest" href="./manifest.json?v=1.12">
 
 <link rel="icon" type="image/png" sizes="192x192" href="A.png">
 <link rel="icon" type="image/png" sizes="512x512" href="A.png">
 <link rel="apple-touch-icon" sizes="180x180" href="A.png">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-tap-highlight-color: transparent; }
-        html, body { height: 100%; overflow: hidden; overscroll-behavior: none; background-color: #ffffff; }
-body { background-color: #ffffff; position: fixed; inset: 0; width: 100%; }
+        html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+        body { background-color: #f4f6f9; position: fixed; inset: 0; width: 100%; }
         .portada {
             width: 100%; max-width: 440px; margin: 0 auto; height: 100%; overflow: hidden;
             background: #ffffff; display: flex; flex-direction: column;
@@ -73,7 +73,7 @@ body { background-color: #ffffff; position: fixed; inset: 0; width: 100%; }
             </a>
 
             <a class="tarjeta ficha" href="./ficha.html">
-                <div class="icono"><img src="ficha.png" alt="Ficha Quirúrgica"></div>
+                <div class="icono"><img src="icon.png" alt="Ficha Quirúrgica"></div>
                 <div class="textos">
                     <div class="titulo-fila">
                         <h2>FICHA QUIRÚRGICA</h2>
@@ -91,7 +91,7 @@ body { background-color: #ffffff; position: fixed; inset: 0; width: 100%; }
     (function() {
         let lastCheck = null;
         try { lastCheck = localStorage.getItem('last_webapp_version'); } catch (e) {}
-        let currentVersion = "2026.11.18.2";
+        let currentVersion = "2026.11.18.1";
 
         if (lastCheck && lastCheck !== currentVersion) {
             try { localStorage.setItem('last_webapp_version', currentVersion); } catch (e) {}
