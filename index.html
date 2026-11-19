@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#ffffff">
     <title>PIEMCA - Carteleras</title>
-<link rel="manifest" href="./manifest.json?v=1.12">
+<link rel="manifest" href="./manifest.json?v=1.13">
 
 <link rel="icon" type="image/png" sizes="192x192" href="A.png">
 <link rel="icon" type="image/png" sizes="512x512" href="A.png">
@@ -91,7 +91,7 @@ body { background-color: #ffffff; position: fixed; inset: 0; width: 100%; }
     (function() {
         let lastCheck = null;
         try { lastCheck = localStorage.getItem('last_webapp_version'); } catch (e) {}
-        let currentVersion = "2026.11.18.1";
+        let currentVersion = "2026.11.18.2";
 
         if (lastCheck && lastCheck !== currentVersion) {
             try { localStorage.setItem('last_webapp_version', currentVersion); } catch (e) {}
