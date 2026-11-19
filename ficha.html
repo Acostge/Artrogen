@@ -458,7 +458,7 @@
         (function () {
             let lastCheck = null;
             try { lastCheck = localStorage.getItem('last_webapp_version_ficha'); } catch (e) {}
-            const currentVersion = "2026.11.18.1";
+            const currentVersion = "2026.11.18.2";
             try { localStorage.setItem('last_webapp_version_ficha', currentVersion); } catch (e) {}
             if (lastCheck && lastCheck !== currentVersion) {
                 if ('caches' in window) { caches.keys().then(function (n) { n.forEach(function (k) { caches.delete(k); }); }); }
