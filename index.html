@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#ffffff">
     <title>PIEMCA - Carteleras</title>
-<link rel="manifest" href="./manifest.json?v=1.12">
+<link rel="manifest" href="./manifest.json?v=1.14">
 
 <link rel="icon" type="image/png" sizes="192x192" href="A.png">
 <link rel="icon" type="image/png" sizes="512x512" href="A.png">
@@ -43,6 +43,25 @@
         .tarjeta.ficha h2 { color: #083264; }
         .flecha { width: 20px; height: 20px; color: #94a3b8; flex-shrink: 0; }
         .textos p { font-size: 13px; color: #64748b; margin-top: 6px; line-height: 1.35; }
+
+        /* ===== Botón discreto GA (Relación de pagos) ===== */
+        .ga { position: fixed; right: max(10px, env(safe-area-inset-right)); bottom: calc(10px + env(safe-area-inset-bottom)); width: 28px; height: 28px; border-radius: 50%; border: none; background: #0B2A5B; color: #ffffff; font-size: 9.5px; font-weight: 800; letter-spacing: .3px; opacity: .4; cursor: pointer; display: grid; place-items: center; z-index: 5; transition: opacity .2s, transform .15s; }
+        .ga:hover { opacity: .85; }
+        .ga:active { opacity: 1; transform: scale(0.92); }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(1, 56, 87, 0.45); z-index: 50; justify-content: center; align-items: center; padding: 12px; }
+        .modal-box { background: #ffffff; width: 100%; max-width: 420px; border-radius: 14px; border-top: 4px solid #013857; box-shadow: 0 10px 30px rgba(0,0,0,0.25); display: flex; flex-direction: column; overflow: hidden; }
+        .modal-title { font-size: 14px; font-weight: 700; color: #013857; text-transform: uppercase; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; }
+        .modal-body { padding: 12px 16px; }
+        .form-field label { display: block; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 3px; }
+        .form-field input { width: 100%; padding: 8px 10px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 13px; color: #334155; outline: none; background: #ffffff; }
+        .form-field input:focus { border-color: #83CCEB; }
+        .chk-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; font-size: 11.5px; color: #475569; line-height: 1.3; cursor: pointer; }
+        .chk-row input { width: auto; margin-top: 2px; flex-shrink: 0; accent-color: #013857; }
+        .modal-msg { font-size: 11.5px; font-weight: bold; margin-top: 6px; min-height: 14px; color: #c62828; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; padding: 12px 16px; border-top: 1px solid #e2e8f0; }
+        .btn-cancelar { background: #e2e8f0; color: #475569; border: none; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .btn-aceptar { background: #013857; color: #ffffff; border: none; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .btn-aceptar:disabled, .btn-cancelar:disabled { opacity: 0.6; cursor: default; }
     </style>
 </head>
 <body>
@@ -85,6 +104,28 @@
         </div>
     </main>
 
+    <!-- Botón discreto: abre la Relación de pagos (misma clave que Aprobación) -->
+    <button class="ga" id="gaBtn" type="button" aria-label="Relación de pagos" onclick="iniciarAcceso()">GA</button>
+
+    <div class="modal-overlay" id="passModal">
+        <div class="modal-box">
+            <div class="modal-title">Acceso restringido</div>
+            <div class="modal-body">
+                <div class="form-field">
+                    <label for="passInput">Contraseña</label>
+                    <input type="password" id="passInput" autocomplete="off" onkeydown="if(event.key==='Enter') verificarClave()">
+                </div>
+                <label class="chk-row"><input type="checkbox" id="chkRecordar"> <span>Recordar este equipo por 7 días</span></label>
+                <label class="chk-row" id="bioRow" style="display:none;"><input type="checkbox" id="chkBio" onchange="if(this.checked) document.getElementById('chkRecordar').checked = true;"> <span>Usar huella o rostro: se confirma 1 vez cada 7 días y la clave se pide cada 30</span></label>
+                <div class="modal-msg" id="passMsg"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancelar" onclick="cerrarClave()">Cancelar</button>
+                <button class="btn-aceptar" id="passOkBtn" onclick="verificarClave()">Entrar</button>
+            </div>
+        </div>
+    </div>
+
 <script>
     // Mismo sistema de actualización que Artrogen: al cambiar este número, los equipos limpian la caché vieja y recargan.
     // OJO: este número debe ser IGUAL al de artrogen.html (comparten el mismo registro en el navegador).
@@ -103,6 +144,156 @@
             try { localStorage.setItem('last_webapp_version', currentVersion); } catch (e) {}
         }
     })();
+</script>
+
+<script>
+    // ===== Acceso a la Relación de pagos: misma clave y mismo sistema de equipos recordados que "Aprobación" =====
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx7c14H0353JWlWcYh0_soIDWtXhmMDXF5GEuEon54X0OghM6ATtdbgWzdra4SIBg-L6w/exec";
+    const LS_SESIONES = 'cartelera_sesiones_v1';
+    const LS_BIO = 'cartelera_bio_v1';
+    const LS_PREF = 'cartelera_pref_v1';
+    const LS_BIOOK = 'cartelera_biook_v1';
+    const DIAS_REFRESCO_BIO = 7;
+
+    function lsLeer(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+    function lsGuardar(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+    function sesionLocal() {
+        const s = lsLeer(LS_SESIONES) || {};
+        const ahora = Date.now();
+        for (const rol of ['aprobacion', 'registro']) {
+            if (s[rol] && s[rol].token && s[rol].exp > ahora) return s[rol];
+        }
+        return null;
+    }
+    function guardarSesionLocal(rol, token, exp) {
+        const s = lsLeer(LS_SESIONES) || {};
+        s[rol] = { token: token, exp: exp };
+        lsGuardar(LS_SESIONES, s);
+    }
+
+    function bufATexto(buf) { return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+    function textoABytes(txt) { return Uint8Array.from(atob(txt), c => c.charCodeAt(0)); }
+    let biometriaDisp = false;
+    (async function () {
+        try {
+            biometriaDisp = !!(window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable
+                && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable());
+        } catch (e) { biometriaDisp = false; }
+    })();
+
+    async function registrarBiometria() {
+        try {
+            const cred = await navigator.credentials.create({ publicKey: {
+                challenge: crypto.getRandomValues(new Uint8Array(32)),
+                rp: { name: 'Cartelera Qx' },
+                user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'equipo', displayName: 'Este equipo' },
+                pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+                authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'discouraged' },
+                timeout: 60000, attestation: 'none'
+            }});
+            return cred ? bufATexto(cred.rawId) : null;
+        } catch (e) { return null; }
+    }
+    async function pedirBiometria() {
+        const id = lsLeer(LS_BIO);
+        if (!id) return false;
+        try {
+            const r = await navigator.credentials.get({ publicKey: {
+                challenge: crypto.getRandomValues(new Uint8Array(32)),
+                allowCredentials: [{ type: 'public-key', id: textoABytes(id), transports: ['internal'] }],
+                userVerification: 'required', timeout: 60000
+            }});
+            return !!r;
+        } catch (e) { return false; }
+    }
+
+    async function enviarAlServidor(payload) {
+        const resp = await fetch(WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+        return await resp.json();
+    }
+
+    function irARelacion() { window.location.href = './relacion.html'; }
+
+    // OJO: antes de pedirBiometria() no debe haber ningún "await" (el celular solo la permite justo tras un toque).
+    async function iniciarAcceso() {
+        try { if (sessionStorage.getItem('rel_clave')) { irARelacion(); return; } } catch (e) {}
+        const sesion = sesionLocal();
+        if (sesion && lsLeer(LS_BIO)) {
+            if (Date.now() < (lsLeer(LS_BIOOK) || 0)) { irARelacion(); return; }
+            const ok = await pedirBiometria();
+            if (ok) {
+                lsGuardar(LS_BIOOK, Date.now() + DIAS_REFRESCO_BIO * 24 * 60 * 60 * 1000);
+                irARelacion();
+                return;
+            }
+        } else if (sesion) {
+            irARelacion();
+            return;
+        }
+        mostrarVentanaClave();
+    }
+
+    function mostrarVentanaClave(mensaje) {
+        const pref = lsLeer(LS_PREF) || {};
+        const inp = document.getElementById('passInput');
+        inp.value = '';
+        document.getElementById('passMsg').innerText = mensaje || '';
+        document.getElementById('chkRecordar').checked = !!pref.recordar;
+        const yaBio = !!lsLeer(LS_BIO);
+        document.getElementById('bioRow').style.display = (biometriaDisp && !yaBio) ? 'flex' : 'none';
+        document.getElementById('chkBio').checked = !!pref.bio && biometriaDisp && !yaBio;
+        document.getElementById('passModal').style.display = 'flex';
+        setTimeout(() => inp.focus(), 100);
+    }
+    function cerrarClave() {
+        document.getElementById('passInput').value = '';
+        document.getElementById('passModal').style.display = 'none';
+    }
+
+    async function verificarClave() {
+        const clave = document.getElementById('passInput').value;
+        const msg = document.getElementById('passMsg');
+        const btn = document.getElementById('passOkBtn');
+        if (!clave) { msg.style.color = '#c62828'; msg.innerText = "Ingrese la contraseña."; return; }
+
+        const quiereBio = biometriaDisp && !lsLeer(LS_BIO) && document.getElementById('chkBio').checked;
+        const recordar = document.getElementById('chkRecordar').checked || quiereBio;
+        btn.disabled = true;
+
+        let bioIdNueva = null;
+        if (quiereBio) {
+            msg.style.color = '#64748b';
+            msg.innerText = "Confirme con su huella o rostro cuando el celular se lo pida...";
+            bioIdNueva = await registrarBiometria();
+        }
+        msg.style.color = '#64748b';
+        msg.innerText = "Verificando...";
+        try {
+            const usaBio = !!(bioIdNueva || lsLeer(LS_BIO));
+            const r = await enviarAlServidor({ action: 'verificarAprobacion', clave: clave, recordar: recordar, bio: usaBio });
+            if (r.ok) {
+                lsGuardar(LS_PREF, { recordar: recordar, bio: quiereBio });
+                if (r.token) {
+                    guardarSesionLocal(r.rol || 'aprobacion', r.token, r.expira);
+                    if (bioIdNueva) lsGuardar(LS_BIO, bioIdNueva);
+                    if (lsLeer(LS_BIO)) lsGuardar(LS_BIOOK, Date.now() + DIAS_REFRESCO_BIO * 24 * 60 * 60 * 1000);
+                } else {
+                    // Sin "recordar equipo": la clave solo vive mientras la app esté abierta (se borra al cerrarla)
+                    try { sessionStorage.setItem('rel_clave', clave); } catch (e) {}
+                }
+                irARelacion();
+            } else {
+                msg.style.color = '#c62828';
+                msg.innerText = r.claveIncorrecta ? "Contraseña incorrecta." : (r.error || "No se pudo verificar.");
+            }
+        } catch (err) {
+            msg.style.color = '#c62828';
+            msg.innerText = "Error de conexión. Intente de nuevo.";
+        } finally {
+            btn.disabled = false;
+        }
+    }
 </script>
 </body>
 </html>
