@@ -90,6 +90,15 @@ td.n,th.n{text-align:right}td.n{font-weight:800;font-size:14px}.mono{font-family
 .only-mob,.tabs{display:none}
 
 /* ---------- tarjetas móvil ---------- */
+.sc{background:#fff;border-radius:8px;padding:10px 12px;border:1px solid #e2e8f0;border-left:5px solid var(--c);box-shadow:0 2px 4px -1px rgba(0,0,0,.04)}
+.sc-h{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;margin-bottom:7px;border-bottom:1px dashed #e2e8f0;padding-bottom:6px}
+.sc-h .l{color:#013857}.sc-h .l b{font-weight:900;margin-right:8px;color:var(--c)}.sc-h .r{font-size:15px;font-weight:800;color:#101828}
+.cf{font-size:11.5px;margin-bottom:4px;color:#334155;display:flex;align-items:flex-start;line-height:1.3}
+.cf strong{color:#64748b;font-size:11px;width:112px;display:inline-block;flex-shrink:0}
+.cf>span{min-width:0;overflow-wrap:anywhere}
+.cf.pac{font-size:13.5px;margin-bottom:7px;line-height:1.25}.cf.pac strong{padding-top:2px}.cf.pac .nm{font-weight:800;color:#0f172a}.cf.pac .ci{display:block;font-size:11px;color:#64748b;font-weight:400;margin-top:1px}
+.tg2{display:flex;gap:4px;flex-wrap:wrap}.mt2{font-size:9.5px;background:#E5F4FB;color:#011D2D;padding:2px 6px;border-radius:4px;font-weight:bold}
+.apr{font-size:10.5px;color:#667085;margin-top:4px;line-height:1.25;font-weight:500;overflow-wrap:anywhere}
 .mc{background:#fff;border-radius:14px;padding:12px 14px;border:1px solid var(--line)}
 .mt{display:flex;align-items:center;gap:8px}.md{font-size:12px;color:var(--mut);font-weight:600}
 .rp{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:#344054;text-align:right}
@@ -274,6 +283,19 @@ function conteos(){
   const ok=x=>fRdv==='Todos'||x.rdv===fRdv, bc=D.cirugias.filter(ok), ba=D.alquileres.filter(ok), bi=fRdv==='Todos'?D.importaciones.length:0;
   return {'Todas':bc.length+ba.length+bi,'IN':bc.filter(c=>c.cat==='IN').length,'OUT':bc.filter(c=>c.cat==='OUT').length,'Bs':bc.filter(c=>c.cat==='Bs').length,'IMPORTACIONES':bi,'ALQ. INST.':ba.length};
 }
+const COLOR={IN:'#0E9F6E',OUT:'#E8590C',Bs:'#5B5BD6'};
+function cardCx(c){
+  const tags=String(c.sistemas||'').split(',').map(x=>x.trim()).filter(Boolean).map(x=>`<span class="mt2">${esc(x)}</span>`).join('');
+  return `<div class="sc" style="--c:${COLOR[c.cat]||'#98A2B3'}"><div class="sc-h"><span class="l"><b>${c.cat||'—'}</b>${esc(c.fecha)}${c.suspendida?'<span class="susp">SUSP.</span>':''}</span><span class="r">${usd(c.monto)}</span></div>
+    <div class="cf pac"><strong>👤 Paciente:</strong><span><span class="nm">${esc(c.paciente||'Por asignar')}</span>${c.ci?`<span class="ci">C.I. ${esc(c.ci)}</span>`:''}</span></div>
+    <div class="cf"><strong>👨🏻‍⚕️ Doctor (a):</strong><span>${esc(c.medico||'—')}</span></div>
+    <div class="cf"><strong>🏥 Clínica:</strong><span>${esc(c.clinica||'—')}</span></div>
+    <div class="cf"><strong>🧰 Instrumentista:</strong><span>${esc(c.instrumentista||'—')}</span></div>
+    <div class="cf"><strong>🚑 Transportista:</strong><span>${esc(c.transportista||'—')}</span></div>
+    <div class="cf"><strong>📱 RDV:</strong><span>${esc(c.rdv||'No asignado')}</span></div>
+    <div class="cf"><strong>🔑 Aprobación:</strong><span>${esc(c.autorizacion||'N/A')}</span></div>
+    <div class="cf"><strong>💉 Tipo de Cx:</strong><span class="tg2">${tags||'—'}</span></div></div>`;
+}
 const chipCat = c => `<span class="chip c-${c||'none'}">${c||'—'}</span>`;
 
 /* ---------------- dibujo ---------------- */
@@ -306,16 +328,15 @@ function render(){
   if(!mostrarCx){ $('boxCx').innerHTML=''; }
   else{
     const sumCx=v.cx.reduce((a,c)=>a+c.monto,0), showRdv=fRdv==='Todos';
-    const w=showRdv?[56,52,158,126,222,100,90,104,62]:[58,54,176,140,262,110,100,70], W=w.reduce((a,b)=>a+b,0);
+    const w=showRdv?[54,104,146,118,190,94,86,98,60]:[56,104,164,130,230,104,94,66], W=w.reduce((a,b)=>a+b,0);
     const cg=w.map(x=>`<col style="width:${(x/W*100).toFixed(2)}%">`).join('');
-    const filas=v.cx.map(c=>`<tr><td class="d">${esc(corta(c.fecha))}</td><td>${chipCat(c.cat)}</td>
+    const filas=v.cx.map(c=>`<tr><td class="d">${esc(corta(c.fecha))}</td><td>${chipCat(c.cat)}${c.autorizacion?`<div class="apr">${esc(c.autorizacion)}</div>`:''}</td>
       <td class="b">${esc(c.paciente)}${c.suspendida?'<span class="susp">SUSP.</span>':''}<div class="s">${esc(c.medico)}</div></td><td>${esc(c.clinica)}</td><td>${esc(c.sistemas)}</td>
       <td>${esc(c.instrumentista||'—')}</td><td>${esc(c.transportista||'—')}</td>${showRdv?`<td>${esc(c.rdv||'—')}</td>`:''}<td class="n">${usd(c.monto)}</td></tr>`).join('');
     const tags=`<span class="tag">RDV: ${esc(fRdv)}</span><span class="tag">Cat.: ${esc(fCat)}</span>`;
-    const tabla = v.cx.length ? `<div class="tw"><table class="fx"><colgroup>${cg}</colgroup><thead><tr><th>Fecha</th><th>Cat.</th><th>Paciente / Doctor</th><th>Clínica</th><th>Tipo de cirugía</th><th>Instrum.</th><th>Transporte</th>${showRdv?'<th>RDV</th>':''}<th class="n">Monto</th></tr></thead><tbody>${filas}</tbody></table></div>`
+    const tabla = v.cx.length ? `<div class="tw"><table class="fx"><colgroup>${cg}</colgroup><thead><tr><th>Fecha</th><th>Cat. / Aprob.</th><th>Paciente / Doctor</th><th>Clínica</th><th>Tipo de cirugía</th><th>Instrum.</th><th>Transporte</th>${showRdv?'<th>RDV</th>':''}<th class="n">Monto</th></tr></thead><tbody>${filas}</tbody></table></div>`
       : `<div class="vacio">No hay cirugías con monto para ${esc(mesTxt)} con estos filtros.</div>`;
-    const cards=v.cx.map(c=>`<div class="mc"><div class="mt">${chipCat(c.cat)}<span class="md">${esc(c.fecha)}</span>${c.suspendida?'<span class="susp" style="margin:0">SUSP.</span>':''}<span class="rp"><span class="av">${esc(ini(c.rdv||'?'))}</span>${esc(c.rdv||'—')}</span></div>
-      <div class="mp">${esc(c.paciente)}</div><div class="ms">${esc(c.medico)} · ${esc(c.clinica)}</div><div class="mq">${esc(c.sistemas)}</div><div class="ma">${num(c.monto)}<i>$</i></div></div>`).join('');
+    const cards=v.cx.map(cardCx).join('');
     $('boxCx').innerHTML = `<div class="panel box"><div class="bh"><h2>Cirugías</h2><span class="cnt">${v.cx.length}</span>${tags}<span class="ord">Ordenado por fecha ↑</span></div>
       <div class="only-desk">${tabla}</div><div class="only-mob">${v.cx.length?`<div class="mlist">${cards}</div>`:`<div class="vacio">Sin cirugías para ${esc(mesTxt)} con estos filtros.</div>`}<div class="mfoot">Total filtrado <b>${usd(sumCx)}</b></div></div>
       <div class="foot"><span>${v.cx.length} cirugías${v.cx.length>8?' · desplace dentro del cuadro para ver todas ↓':''}</span><span>Total filtrado &nbsp;<b>${usd(sumCx)}</b></span></div></div>`;
@@ -362,7 +383,7 @@ function render(){
 
   // por RDV
   const pr=porRdv(), mx=Math.max(1,...pr.map(x=>x.t));
-  $('panRdv').innerHTML = `<h3>Por RDV · total del mes</h3>`+(pr.length?pr.map(x=>`<button type="button" class="rb ${fRdv===x.n?'on':''}" data-act="rdv" data-v="${esc(x.n)}" data-toggle="1"><div class="rn"><span class="av">${esc(ini(x.n))}</span>${esc(x.n)}<em>${x.c} cir.</em></div><div class="bar"><i style="width:${(x.t/mx*100).toFixed(0)}%"></i></div><b>${num(x.t)}</b></button>`).join('')+`<p class="note">Toque un representante para filtrar la tabla.</p>`:'<p class="note">Sin datos este mes.</p>');
+  $('panRdv').innerHTML = `<h3>Por RDV · total del mes</h3>`+(pr.length?pr.map(x=>`<button type="button" class="rb ${fRdv===x.n?'on':''}" data-act="rdv" data-v="${esc(x.n)}" data-toggle="1"><div class="rn"><span class="av">${esc(ini(x.n))}</span>${esc(x.n)}<em>${x.c} Cx</em></div><div class="bar"><i style="width:${(x.t/mx*100).toFixed(0)}%"></i></div><b>${num(x.t)}</b></button>`).join('')+`<p class="note">Toque un representante para filtrar la tabla.</p>`:'<p class="note">Sin datos este mes.</p>');
 
   $('selMes').value=mesSel; $('selAno').value=anoSel;
 }
@@ -372,8 +393,8 @@ function csvCelda(x){ x=String(x==null?'':x); return /[;"\n]/.test(x)?'"'+x.repl
 function exportarCsv(){
   if(!D) return;
   const v=visibles(), L=[];
-  if(v.cx.length){ L.push(['Fecha','Categoría','Paciente','Doctor','Clínica','Tipo de cirugía','Instrumentista','Transporte','RDV','Monto']);
-    v.cx.forEach(c=>L.push([c.fecha,c.cat,c.paciente,c.medico,c.clinica,c.sistemas,c.instrumentista,c.transportista,c.rdv,c.monto])); L.push([]); }
+  if(v.cx.length){ L.push(['Fecha','Categoría','Aprobación','Paciente','C.I.','Doctor','Clínica','Tipo de cirugía','Instrumentista','Transporte','RDV','Monto']);
+    v.cx.forEach(c=>L.push([c.fecha,c.cat,c.autorizacion,c.paciente,c.ci,c.medico,c.clinica,c.sistemas,c.instrumentista,c.transportista,c.rdv,c.monto])); L.push([]); }
   if(v.imp.length){ L.push(['Fecha','Categoría','Proveedor','Descripción','Tracking','Agente aduanal','Monto']);
     v.imp.forEach(i=>L.push([i.fecha,i.categoria,i.proveedor,i.descripcion,i.tracking,i.agente,i.monto])); L.push([]); }
   if(v.alq.length){ L.push(['Fecha','Categoría','Paciente','Doctor','Clínica','Sistema','RDV','Monto']);
